@@ -73,11 +73,11 @@ def enroll_in_class():
     return jsonify(result), 201
 
 
-@users_bp.route("/users/me/classes/<int:enrollment_id>", methods=["DELETE"])
+@users_bp.route("/users/me/classes/<enrollment_id>", methods=["DELETE"])
 @require_auth
 def unenroll_from_class(enrollment_id):
     """Unenroll the authenticated user from a class."""
-    success = unenroll_user(g.user_id, enrollment_id)
+    success = unenroll_user(g.user_id, str(enrollment_id))
 
     if not success:
         return jsonify({"error": "Enrollment not found"}), 404

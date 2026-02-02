@@ -5,7 +5,7 @@ struct UserScheduleEntry: Codable, Identifiable {
     let classCode: String
     let className: String
     let quarter: String
-    let enrollmentId: Int
+    let enrollmentId: String
 
     enum CodingKeys: String, CodingKey {
         case id

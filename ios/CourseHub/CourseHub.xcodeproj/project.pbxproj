@@ -25,6 +25,7 @@
 		A1000010 /* ChatViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000011 /* ChatViewModel.swift */; };
 		A1000011 /* ChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000012 /* ChatView.swift */; };
 		A1000012 /* ClassDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000013 /* ClassDetailView.swift */; };
+		B13314C22F3163E900A1C80F /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = B13314C12F3163E800A1C80F /* GoogleService-Info.plist */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -46,6 +47,7 @@
 		A2000012 /* ChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatView.swift; sourceTree = "<group>"; };
 		A2000013 /* ClassDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClassDetailView.swift; sourceTree = "<group>"; };
 		A3000001 /* CourseHub.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CourseHub.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B13314C12F3163E800A1C80F /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -64,6 +66,7 @@
 		A5000001 = {
 			isa = PBXGroup;
 			children = (
+				B13314C12F3163E800A1C80F /* GoogleService-Info.plist */,
 				A5000002 /* CourseHub */,
 				4E0A7DD52F3140CF0018AC36 /* GoogleService-Info.plist */,
 				A5000010 /* Products */,
@@ -195,6 +198,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				4E0A7DD62F3140CF0018AC36 /* GoogleService-Info.plist in Resources */,
+				B13314C22F3163E900A1C80F /* GoogleService-Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

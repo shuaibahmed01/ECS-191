@@ -21,7 +21,7 @@ class MyScheduleViewModel {
     }
 
     @MainActor
-    func removeClass(enrollmentId: Int) async {
+    func removeClass(enrollmentId: String) async {
         errorMessage = nil
 
         do {

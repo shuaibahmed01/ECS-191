@@ -33,7 +33,7 @@ struct ClassDetailView: View {
             classCode: "ECS 032A",
             className: "Introduction to Programming",
             quarter: "W26",
-            enrollmentId: 1
+            enrollmentId: "1"
         ))
     }
 }
