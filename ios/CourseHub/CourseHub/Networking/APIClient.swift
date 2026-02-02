@@ -34,6 +34,10 @@ struct UserClassListResponse: Codable {
     let classes: [UserScheduleEntry]
 }
 
+struct MessageListResponse: Codable {
+    let messages: [ChatMessage]
+}
+
 class APIClient {
     static let shared = APIClient()
 
@@ -77,6 +81,7 @@ class APIClient {
 
         do {
             let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
             return try decoder.decode(T.self, from: data)
         } catch {
             throw APIError.decodingError(error)
@@ -133,5 +138,24 @@ class APIClient {
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         try? await URLSession.shared.data(for: request)
+    }
+
+    func fetchMessages(classId: Int) async throws -> [ChatMessage] {
+        let response: MessageListResponse = try await request(
+            endpoint: "/classes/\(classId)/messages"
+        )
+        return response.messages
+    }
+
+    func sendMessage(classId: Int, content: String, senderName: String) async throws -> ChatMessage {
+        let body = try JSONEncoder().encode([
+            "content": content,
+            "sender_name": senderName
+        ])
+        return try await request(
+            endpoint: "/classes/\(classId)/messages",
+            method: "POST",
+            body: body
+        )
     }
 }

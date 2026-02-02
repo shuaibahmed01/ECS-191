@@ -15,6 +15,10 @@
 		A1000006 /* MyScheduleViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000006 /* MyScheduleViewModel.swift */; };
 		A1000007 /* ClassListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000007 /* ClassListView.swift */; };
 		A1000008 /* MyScheduleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000008 /* MyScheduleView.swift */; };
+		A1000009 /* ChatMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000010 /* ChatMessage.swift */; };
+		A1000010 /* ChatViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000011 /* ChatViewModel.swift */; };
+		A1000011 /* ChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000012 /* ChatView.swift */; };
+		A1000012 /* ClassDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000013 /* ClassDetailView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -27,6 +31,10 @@
 		A2000007 /* ClassListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClassListView.swift; sourceTree = "<group>"; };
 		A2000008 /* MyScheduleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyScheduleView.swift; sourceTree = "<group>"; };
 		A2000009 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A2000010 /* ChatMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatMessage.swift; sourceTree = "<group>"; };
+		A2000011 /* ChatViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatViewModel.swift; sourceTree = "<group>"; };
+		A2000012 /* ChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatView.swift; sourceTree = "<group>"; };
+		A2000013 /* ClassDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClassDetailView.swift; sourceTree = "<group>"; };
 		A3000001 /* CourseHub.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CourseHub.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -67,6 +75,7 @@
 			children = (
 				A2000002 /* CourseClass.swift */,
 				A2000003 /* UserScheduleEntry.swift */,
+				A2000010 /* ChatMessage.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -76,6 +85,7 @@
 			children = (
 				A2000005 /* ClassListViewModel.swift */,
 				A2000006 /* MyScheduleViewModel.swift */,
+				A2000011 /* ChatViewModel.swift */,
 			);
 			path = ViewModels;
 			sourceTree = "<group>";
@@ -85,6 +95,8 @@
 			children = (
 				A2000007 /* ClassListView.swift */,
 				A2000008 /* MyScheduleView.swift */,
+				A2000012 /* ChatView.swift */,
+				A2000013 /* ClassDetailView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -181,6 +193,10 @@
 				A1000006 /* MyScheduleViewModel.swift in Sources */,
 				A1000007 /* ClassListView.swift in Sources */,
 				A1000008 /* MyScheduleView.swift in Sources */,
+				A1000009 /* ChatMessage.swift in Sources */,
+				A1000010 /* ChatViewModel.swift in Sources */,
+				A1000011 /* ChatView.swift in Sources */,
+				A1000012 /* ClassDetailView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

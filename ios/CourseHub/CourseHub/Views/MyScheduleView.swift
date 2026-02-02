@@ -18,8 +18,7 @@ struct MyScheduleView: View {
                 } else {
                     List(viewModel.enrolledClasses) { entry in
                         NavigationLink {
-                            // Placeholder for class detail view
-                            Text("Class detail for \(entry.classCode)")
+                            ClassDetailView(entry: entry)
                         } label: {
                             VStack(alignment: .leading) {
                                 Text(entry.classCode)
