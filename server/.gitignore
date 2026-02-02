@@ -11,3 +11,6 @@ __pycache__/
 *.pyzwzw
 *.pyzwzwz
 *.pyzwzwzw
+
+# Firebase credentials (DO NOT COMMIT - contains private keys)
+firebase-credentials.json

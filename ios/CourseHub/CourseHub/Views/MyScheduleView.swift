@@ -6,54 +6,68 @@ struct MyScheduleView: View {
 
     var body: some View {
         NavigationStack {
-            Group {
-                if viewModel.isLoading {
-                    ProgressView("Loading schedule...")
-                } else if viewModel.enrolledClasses.isEmpty {
-                    ContentUnavailableView(
-                        "No Classes",
-                        systemImage: "calendar.badge.plus",
-                        description: Text("Tap the button below to add classes")
-                    )
-                } else {
-                    List(viewModel.enrolledClasses) { entry in
-                        NavigationLink {
-                            ClassDetailView(entry: entry)
-                        } label: {
-                            VStack(alignment: .leading) {
-                                Text(entry.classCode)
-                                    .font(.headline)
-                                Text(entry.className)
-                                    .font(.subheadline)
-                                    .foregroundColor(.secondary)
-                            }
-                        }
-                        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                            Button(role: .destructive) {
-                                Task {
-                                    await viewModel.removeClass(enrollmentId: entry.enrollmentId)
-                                }
+            ZStack {
+                Group {
+                    if viewModel.isLoading {
+                        ProgressView("Loading schedule...")
+                    } else if viewModel.enrolledClasses.isEmpty {
+                        ContentUnavailableView(
+                            "No Classes",
+                            systemImage: "calendar.badge.plus",
+                            description: Text("Tap + to add classes")
+                        )
+                    } else {
+                        List(viewModel.enrolledClasses) { entry in
+                            NavigationLink {
+                                ClassDetailView(entry: entry)
                             } label: {
-                                Label("Remove", systemImage: "trash")
+                                VStack(alignment: .leading) {
+                                    Text(entry.classCode)
+                                        .font(.headline)
+                                    Text(entry.className)
+                                        .font(.subheadline)
+                                        .foregroundColor(.secondary)
+                                }
+                            }
+                            .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                                Button(role: .destructive) {
+                                    Task {
+                                        await viewModel.removeClass(enrollmentId: entry.enrollmentId)
+                                    }
+                                } label: {
+                                    Label("Remove", systemImage: "trash")
+                                }
                             }
                         }
                     }
+                }
+
+                // Floating Add Button
+                VStack {
+                    Spacer()
+                    HStack {
+                        Spacer()
+                        Button {
+                            showingAddClass = true
+                        } label: {
+                            HStack {
+                                Image(systemName: "plus")
+                                Text("Add Class")
+                            }
+                            .font(.headline)
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 20)
+                            .padding(.vertical, 14)
+                            .background(Color.blue)
+                            .clipShape(Capsule())
+                            .shadow(radius: 4)
+                        }
+                        Spacer()
+                    }
+                    .padding(.bottom, 16)
                 }
             }
             .navigationTitle("My Schedule")
-            .toolbar {
-                ToolbarItem(placement: .bottomBar) {
-                    Button {
-                        showingAddClass = true
-                    } label: {
-                        HStack {
-                            Image(systemName: "plus.circle.fill")
-                            Text("Add Class")
-                        }
-                        .font(.headline)
-                    }
-                }
-            }
             .sheet(isPresented: $showingAddClass) {
                 ClassListView(
                     enrolledClassIds: Set(viewModel.enrolledClasses.map { $0.id }),

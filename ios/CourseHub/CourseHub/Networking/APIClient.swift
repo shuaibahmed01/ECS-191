@@ -1,4 +1,5 @@
 import Foundation
+import FirebaseAuth
 
 enum APIError: Error, LocalizedError {
     case invalidURL
@@ -6,6 +7,7 @@ enum APIError: Error, LocalizedError {
     case httpError(Int)
     case decodingError(Error)
     case networkError(Error)
+    case notAuthenticated
 
     var errorDescription: String? {
         switch self {
@@ -16,12 +18,18 @@ enum APIError: Error, LocalizedError {
         case .httpError(let code):
             if code == 409 {
                 return "Already enrolled in this class"
+            } else if code == 401 {
+                return "Not authenticated. Please sign in again."
+            } else if code == 403 {
+                return "Access denied"
             }
             return "HTTP error: \(code)"
         case .decodingError(let error):
             return "Failed to decode response: \(error.localizedDescription)"
         case .networkError(let error):
             return "Network error: \(error.localizedDescription)"
+        case .notAuthenticated:
+            return "Not authenticated. Please sign in."
         }
     }
 }
@@ -42,14 +50,22 @@ class APIClient {
     static let shared = APIClient()
 
     private let baseURL = "http://localhost:5001/v1"
-    private let userId = 1  // Hardcoded for M0
 
     private init() {}
+
+    /// Gets the Firebase ID token for the current user
+    private func getAuthToken() async throws -> String {
+        guard let user = Auth.auth().currentUser else {
+            throw APIError.notAuthenticated
+        }
+        return try await user.getIDToken()
+    }
 
     private func request<T: Decodable>(
         endpoint: String,
         method: String = "GET",
-        body: Data? = nil
+        body: Data? = nil,
+        requiresAuth: Bool = true
     ) async throws -> T {
         guard let url = URL(string: "\(baseURL)\(endpoint)") else {
             throw APIError.invalidURL
@@ -58,7 +74,12 @@ class APIClient {
         var request = URLRequest(url: url)
         request.httpMethod = method
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue("\(userId)", forHTTPHeaderField: "X-User-Id")
+
+        // Add auth header if required
+        if requiresAuth {
+            let token = try await getAuthToken()
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
 
         if let body = body {
             request.httpBody = body
@@ -93,14 +114,14 @@ class APIClient {
         if !query.isEmpty {
             endpoint += "?q=\(query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? query)"
         }
-        let response: ClassListResponse = try await request(endpoint: endpoint)
+        let response: ClassListResponse = try await request(endpoint: endpoint, requiresAuth: false)
         return response.classes
     }
 
     func enrollInClass(classId: Int) async throws -> UserScheduleEntry {
         let body = try JSONEncoder().encode(["class_id": classId])
         return try await request(
-            endpoint: "/users/\(userId)/classes",
+            endpoint: "/users/me/classes",
             method: "POST",
             body: body
         )
@@ -108,21 +129,24 @@ class APIClient {
 
     func fetchMyClasses() async throws -> [UserScheduleEntry] {
         let response: UserClassListResponse = try await request(
-            endpoint: "/users/\(userId)/classes"
+            endpoint: "/users/me/classes"
         )
         return response.classes
     }
 
     func unenroll(enrollmentId: Int) async throws {
-        guard let url = URL(string: "\(baseURL)/users/\(userId)/classes/\(enrollmentId)") else {
+        guard let url = URL(string: "\(baseURL)/users/me/classes/\(enrollmentId)") else {
             throw APIError.invalidURL
         }
 
-        var request = URLRequest(url: url)
-        request.httpMethod = "DELETE"
-        request.setValue("\(userId)", forHTTPHeaderField: "X-User-Id")
+        var urlRequest = URLRequest(url: url)
+        urlRequest.httpMethod = "DELETE"
+        urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
-        let (_, response) = try await URLSession.shared.data(for: request)
+        let token = try await getAuthToken()
+        urlRequest.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+
+        let (_, response) = try await URLSession.shared.data(for: urlRequest)
 
         guard let httpResponse = response as? HTTPURLResponse else {
             throw APIError.invalidResponse
@@ -147,15 +171,44 @@ class APIClient {
         return response.messages
     }
 
-    func sendMessage(classId: Int, content: String, senderName: String) async throws -> ChatMessage {
+    func sendMessage(classId: Int, content: String) async throws -> ChatMessage {
         let body = try JSONEncoder().encode([
-            "content": content,
-            "sender_name": senderName
+            "content": content
         ])
         return try await request(
             endpoint: "/classes/\(classId)/messages",
             method: "POST",
             body: body
         )
+    }
+
+    func registerUser(uid: String, email: String, displayName: String) async throws {
+        let body = try JSONEncoder().encode([
+            "uid": uid,
+            "email": email,
+            "display_name": displayName
+        ])
+
+        guard let url = URL(string: "\(baseURL)/users") else {
+            throw APIError.invalidURL
+        }
+
+        var urlRequest = URLRequest(url: url)
+        urlRequest.httpMethod = "POST"
+        urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        let token = try await getAuthToken()
+        urlRequest.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        urlRequest.httpBody = body
+
+        let (_, response) = try await URLSession.shared.data(for: urlRequest)
+
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw APIError.invalidResponse
+        }
+
+        guard (200...299).contains(httpResponse.statusCode) else {
+            throw APIError.httpError(httpResponse.statusCode)
+        }
     }
 }

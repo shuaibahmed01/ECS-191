@@ -3,7 +3,7 @@ import Foundation
 struct ChatMessage: Codable, Identifiable {
     let id: Int
     let classId: Int
-    let senderId: Int
+    let senderId: String
     let senderName: String
     let content: String
     let timestamp: Date

@@ -57,3 +57,6 @@ playground.xcworkspace
 
 # Archives
 *.xcarchive
+
+#google service info plist
+GoogleService-Info.plist

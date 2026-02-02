@@ -7,6 +7,7 @@ from seed_data import SEED_CLASSES, SEED_MESSAGES
 _classes = {}        # id -> class dict
 _enrollments = {}    # id -> enrollment dict
 _messages = {}       # id -> message dict
+_users = {}          # uid (string) -> user dict
 _next_enrollment_id = 1
 _next_message_id = 1
 
@@ -145,3 +146,22 @@ def create_message(class_id, sender_id, sender_name, content):
     _next_message_id += 1
 
     return message
+
+
+def create_user(uid, email, display_name):
+    """
+    Create or update a user in the database.
+    Returns the user dict.
+    """
+    user = {
+        "uid": uid,
+        "email": email,
+        "display_name": display_name
+    }
+    _users[uid] = user
+    return user
+
+
+def get_user_by_id(uid):
+    """Return a user by their Firebase UID, or None if not found."""
+    return _users.get(uid)

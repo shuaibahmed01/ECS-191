@@ -1,38 +1,60 @@
 """Tests for chat API endpoints."""
 
 import json
+from unittest.mock import patch
+from services.datastore_service import create_user
 
 
 class TestGetMessages:
     """Tests for GET /v1/classes/<class_id>/messages"""
 
-    def test_get_messages_returns_200(self, seeded_client):
+    def test_get_messages_returns_200(self, auth_client):
         """Should return 200 status code."""
-        response = seeded_client.get("/v1/classes/1/messages")
+        auth_client.post("/v1/users/me/classes",
+            data=json.dumps({"class_id": 1}),
+            content_type="application/json"
+        )
+        response = auth_client.get("/v1/classes/1/messages")
         assert response.status_code == 200
 
-    def test_get_messages_returns_list(self, seeded_client):
+    def test_get_messages_returns_list(self, auth_client):
         """Should return a list of messages."""
-        response = seeded_client.get("/v1/classes/1/messages")
+        auth_client.post("/v1/users/me/classes",
+            data=json.dumps({"class_id": 1}),
+            content_type="application/json"
+        )
+        response = auth_client.get("/v1/classes/1/messages")
         data = json.loads(response.data)
         assert "messages" in data
         assert isinstance(data["messages"], list)
 
-    def test_get_messages_for_class_with_seed_data(self, seeded_client):
+    def test_get_messages_for_class_with_seed_data(self, auth_client):
         """Should return seed messages for class 1."""
-        response = seeded_client.get("/v1/classes/1/messages")
+        auth_client.post("/v1/users/me/classes",
+            data=json.dumps({"class_id": 1}),
+            content_type="application/json"
+        )
+        response = auth_client.get("/v1/classes/1/messages")
         data = json.loads(response.data)
         assert len(data["messages"]) == 4  # Class 1 has 4 seed messages
 
-    def test_get_messages_for_class_without_messages(self, seeded_client):
+    def test_get_messages_for_class_without_messages(self, auth_client):
         """Should return empty list for class with no messages."""
-        response = seeded_client.get("/v1/classes/2/messages")
+        auth_client.post("/v1/users/me/classes",
+            data=json.dumps({"class_id": 2}),
+            content_type="application/json"
+        )
+        response = auth_client.get("/v1/classes/2/messages")
         data = json.loads(response.data)
         assert data["messages"] == []
 
-    def test_get_messages_contains_required_fields(self, seeded_client):
+    def test_get_messages_contains_required_fields(self, auth_client):
         """Should return messages with all required fields."""
-        response = seeded_client.get("/v1/classes/1/messages")
+        auth_client.post("/v1/users/me/classes",
+            data=json.dumps({"class_id": 1}),
+            content_type="application/json"
+        )
+        response = auth_client.get("/v1/classes/1/messages")
         data = json.loads(response.data)
         message = data["messages"][0]
 
@@ -43,9 +65,13 @@ class TestGetMessages:
         assert "content" in message
         assert "timestamp" in message
 
-    def test_get_messages_sorted_by_timestamp(self, seeded_client):
+    def test_get_messages_sorted_by_timestamp(self, auth_client):
         """Messages should be sorted by timestamp."""
-        response = seeded_client.get("/v1/classes/1/messages")
+        auth_client.post("/v1/users/me/classes",
+            data=json.dumps({"class_id": 1}),
+            content_type="application/json"
+        )
+        response = auth_client.get("/v1/classes/1/messages")
         data = json.loads(response.data)
         messages = data["messages"]
 
@@ -56,20 +82,30 @@ class TestGetMessages:
 class TestPostMessage:
     """Tests for POST /v1/classes/<class_id>/messages"""
 
-    def test_post_message_returns_201(self, seeded_client):
+    def test_post_message_returns_201(self, auth_client):
         """Should return 201 status code on success."""
-        response = seeded_client.post(
+        create_user("test_user", "test@test.com", "Test User")
+        auth_client.post("/v1/users/me/classes",
+            data=json.dumps({"class_id": 1}),
+            content_type="application/json"
+        )
+        response = auth_client.post(
             "/v1/classes/1/messages",
-            data=json.dumps({"content": "Hello!", "sender_name": "Test User"}),
+            data=json.dumps({"content": "Hello!"}),
             content_type="application/json"
         )
         assert response.status_code == 201
 
-    def test_post_message_returns_created_message(self, seeded_client):
+    def test_post_message_returns_created_message(self, auth_client):
         """Should return the created message."""
-        response = seeded_client.post(
+        create_user("test_user", "test@test.com", "Test User")
+        auth_client.post("/v1/users/me/classes",
+            data=json.dumps({"class_id": 1}),
+            content_type="application/json"
+        )
+        response = auth_client.post(
             "/v1/classes/1/messages",
-            data=json.dumps({"content": "Hello!", "sender_name": "Test User"}),
+            data=json.dumps({"content": "Hello!"}),
             content_type="application/json"
         )
         data = json.loads(response.data)
@@ -80,61 +116,88 @@ class TestPostMessage:
         assert "id" in data
         assert "timestamp" in data
 
-    def test_post_message_missing_content(self, seeded_client):
+    def test_post_message_missing_content(self, auth_client):
         """Should return 400 when content is missing."""
-        response = seeded_client.post(
+        auth_client.post("/v1/users/me/classes",
+            data=json.dumps({"class_id": 1}),
+            content_type="application/json"
+        )
+        response = auth_client.post(
             "/v1/classes/1/messages",
-            data=json.dumps({"sender_name": "Test User"}),
+            data=json.dumps({"other_field": "value"}),
             content_type="application/json"
         )
         assert response.status_code == 400
         data = json.loads(response.data)
         assert "content" in data["error"].lower()
 
-    def test_post_message_missing_sender_name(self, seeded_client):
-        """Should return 400 when sender_name is missing."""
-        response = seeded_client.post(
-            "/v1/classes/1/messages",
-            data=json.dumps({"content": "Hello!"}),
+    def test_post_message_empty_body(self, auth_client):
+        """Should return 400 when body is empty."""
+        auth_client.post("/v1/users/me/classes",
+            data=json.dumps({"class_id": 1}),
             content_type="application/json"
         )
-        assert response.status_code == 400
-        data = json.loads(response.data)
-        assert "sender_name" in data["error"].lower()
-
-    def test_post_message_empty_body(self, seeded_client):
-        """Should return 400 when body is empty."""
-        response = seeded_client.post(
+        response = auth_client.post(
             "/v1/classes/1/messages",
             data="",
             content_type="application/json"
         )
         assert response.status_code == 400
 
-    def test_post_message_persists(self, seeded_client):
+    def test_post_message_persists(self, auth_client):
         """Posted message should appear in subsequent GET."""
+        create_user("test_user", "test@test.com", "Test User")
+        auth_client.post("/v1/users/me/classes",
+            data=json.dumps({"class_id": 2}),
+            content_type="application/json"
+        )
+
         # Post a new message
-        seeded_client.post(
+        auth_client.post(
             "/v1/classes/2/messages",
-            data=json.dumps({"content": "New message", "sender_name": "Alice"}),
+            data=json.dumps({"content": "New message"}),
             content_type="application/json"
         )
 
         # Fetch messages and verify it's there
-        response = seeded_client.get("/v1/classes/2/messages")
+        response = auth_client.get("/v1/classes/2/messages")
         data = json.loads(response.data)
 
         assert len(data["messages"]) == 1
         assert data["messages"][0]["content"] == "New message"
-        assert data["messages"][0]["sender_name"] == "Alice"
 
-    def test_post_message_uses_header_user_id(self, seeded_client):
-        """Should use X-User-Id header for sender_id."""
-        response = seeded_client.post(
+    def test_post_message_uses_authenticated_user(self, auth_client):
+        """Should use authenticated user's ID for sender_id."""
+        create_user("test_user", "test@test.com", "Test User")
+        auth_client.post("/v1/users/me/classes",
+            data=json.dumps({"class_id": 1}),
+            content_type="application/json"
+        )
+        response = auth_client.post(
             "/v1/classes/1/messages",
-            data=json.dumps({"content": "Hello!", "sender_name": "Test User"}),
-            content_type="application/json",
-            headers={"X-User-Id": "42"}
+            data=json.dumps({"content": "Hello!"}),
+            content_type="application/json"
         )
         data = json.loads(response.data)
-        assert data["sender_id"] == 42
+        assert data["sender_id"] == "test_user"
+
+
+class TestChatAuthorization:
+    """Tests for chat access control."""
+
+    def test_cannot_read_messages_without_enrollment(self, auth_client):
+        """Should return 403 when not enrolled in class."""
+        # Use a fresh user that hasn't enrolled in anything
+        response = auth_client.get("/v1/classes/5/messages", uid="unenrolled_user")
+        assert response.status_code == 403
+
+    def test_cannot_post_messages_without_enrollment(self, auth_client):
+        """Should return 403 when posting to class not enrolled in."""
+        # Use a fresh user that hasn't enrolled in anything
+        response = auth_client.post(
+            "/v1/classes/5/messages",
+            uid="unenrolled_user",
+            data=json.dumps({"content": "Hello!"}),
+            content_type="application/json"
+        )
+        assert response.status_code == 403
