@@ -1,4 +1,5 @@
 import Foundation
+import FirebaseAuth
 
 @Observable
 class ChatViewModel {
@@ -9,8 +10,14 @@ class ChatViewModel {
     var errorMessage: String?
 
     private let classId: Int
-    private let currentUserId = 1  // Hardcoded for M0
-    let currentUserName = "Me"  // Hardcoded for M0
+
+    var currentUserName: String {
+        Auth.auth().currentUser?.displayName ?? "Me"
+    }
+
+    private var currentUserId: String? {
+        Auth.auth().currentUser?.uid
+    }
 
     init(classId: Int) {
         self.classId = classId
@@ -41,8 +48,7 @@ class ChatViewModel {
         do {
             let newMessage = try await APIClient.shared.sendMessage(
                 classId: classId,
-                content: content,
-                senderName: currentUserName
+                content: content
             )
             messages.append(newMessage)
             messageText = ""
@@ -54,6 +60,7 @@ class ChatViewModel {
     }
 
     func isCurrentUser(message: ChatMessage) -> Bool {
-        return message.senderId == currentUserId
+        guard let userId = currentUserId else { return false }
+        return message.senderId == userId
     }
 }

@@ -1,0 +1,9 @@
+# macOS
+.DS_Store
+
+# Xcode user-specific settings
+xcuserdata/
+*.xcuserdatad/
+
+# Optional: Firebase iOS config (teammates can download from Firebase Console)
+# GoogleService-Info.plist

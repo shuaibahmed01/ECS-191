@@ -34,6 +34,7 @@ CourseHub provides a single iOS app where students can:
 | **Client** | iOS (Swift, SwiftUI) |
 | **Server** | Google App Engine (Standard Environment), Python 3.12, Flask with Blueprints |
 | **Database** | Firestore in Datastore Mode (`google-cloud-datastore` package) |
+| **Authentication** | Firebase Authentication (Email/Password) |
 | **Deployment** | Google App Engine (Standard), gunicorn |
 
 ## Milestone 0 Scope
@@ -45,7 +46,6 @@ Milestone 0 delivers two core features:
 
 ### Simplifications for M0
 
-- **No login/signup flow.** Authentication is simplified to an `X-User-Id` header on every request.
 - **No WebSockets.** Chat uses HTTP polling every 5 seconds.
 - **No separate GroupChat entity.** Chat membership is derived from class enrollment.
 - **Hardcoded seed data.** Classes are loaded from a Python list, not a real course catalog API.
@@ -89,7 +89,7 @@ ECS-191/
 
 | Decision | Choice | Rationale |
 |----------|--------|-----------|
-| Auth (M0) | `X-User-Id` header | No login/signup needed for milestone 0; simplifies development |
+| Auth | Firebase Authentication | Email/password auth with secure token verification; easy to add social login later |
 | DB package | `google-cloud-datastore` | Entities are plain dicts (not ORM objects); easy to swap DB later |
 | Chat membership | Derived from `UserClass` enrollment | No separate GroupChat entity needed; enrollment = membership |
 | Chat transport | HTTP polling (5s interval) | Simple implementation for M0; no WebSocket complexity |
@@ -112,3 +112,4 @@ ECS-191/
 - [API Reference](api.md) -- Complete REST API specification with request/response examples
 - [Add Class Feature](add_class.md) -- Feature spec, wireframes, user stories, test cases
 - [Class Groupchat Feature](class_groupchat.md) -- Feature spec, wireframes, user stories, test cases
+- [Authentication](authentication.md) -- Firebase auth implementation, login/signup flow, token verification

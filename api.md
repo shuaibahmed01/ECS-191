@@ -2,25 +2,25 @@
 
 ## Overview
 
-The CourseHub REST API is served from Google App Engine under the `/v1/` prefix. All endpoints accept and return JSON. Authentication for Milestone 0 uses a simplified `X-User-Id` header.
+The CourseHub REST API is served under the `/v1/` prefix. All endpoints accept and return JSON. Authentication uses Firebase ID tokens.
 
-**Base URL:** `https://<project-id>.appspot.com/v1`
+**Base URL (local):** `http://localhost:5001/v1`
 
-## Authentication (M0)
+## Authentication
 
-Every request must include the `X-User-Id` header:
+Protected endpoints require a Firebase ID token in the Authorization header:
 
 ```
-X-User-Id: 12345
+Authorization: Bearer <firebase_id_token>
 ```
 
-The server trusts this header without verification for Milestone 0. This will be replaced with proper authentication in a later milestone.
+The server verifies the token with Firebase and extracts the user ID from it.
 
 ## Common Headers
 
 | Header | Required | Description |
 |--------|----------|-------------|
-| `X-User-Id` | Yes | The ID of the authenticated user |
+| `Authorization` | For protected endpoints | `Bearer <firebase_id_token>` |
 | `Content-Type` | For POST/PUT | Must be `application/json` |
 
 ## Error Response Format
@@ -41,6 +41,7 @@ All error responses follow this structure:
 | `201` | Created (new resource) |
 | `204` | No Content (successful deletion) |
 | `400` | Bad Request (invalid input) |
+| `401` | Unauthorized (missing or invalid token) |
 | `403` | Forbidden (not enrolled in class) |
 | `404` | Not Found |
 | `409` | Conflict (duplicate enrollment) |
@@ -50,11 +51,11 @@ All error responses follow this structure:
 
 ## Endpoints
 
-### Classes
+### Classes (Public)
 
 #### `GET /v1/classes`
 
-List all classes in the catalog. Optionally filter by search query.
+List all classes in the catalog. Optionally filter by search query. **No authentication required.**
 
 **Query Parameters:**
 
@@ -68,47 +69,40 @@ List all classes in the catalog. Optionally filter by search query.
 {
   "classes": [
     {
-      "id": 5634161670881280,
+      "id": 1,
       "class_code": "ECS 191",
-      "class_name": "Software Design Project",
+      "class_name": "Design Project",
       "quarter": "W26"
     },
     {
-      "id": 5634161670881281,
+      "id": 2,
       "class_code": "ECS 170",
-      "class_name": "Intro to Artificial Intelligence",
+      "class_name": "Introduction to Artificial Intelligence",
       "quarter": "W26"
     }
   ]
 }
 ```
 
-**Example Request:**
-
-```bash
-curl -H "X-User-Id: 1" \
-  "https://<project-id>.appspot.com/v1/classes?q=ECS%20191"
-```
-
 ---
 
 #### `GET /v1/classes/:class_id`
 
-Get details for a single class.
+Get details for a single class. **No authentication required.**
 
 **Path Parameters:**
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `class_id` | int | The Datastore key ID of the class |
+| `class_id` | int | The ID of the class |
 
 **Response: `200 OK`**
 
 ```json
 {
-  "id": 5634161670881280,
+  "id": 1,
   "class_code": "ECS 191",
-  "class_name": "Software Design Project",
+  "class_name": "Design Project",
   "quarter": "W26"
 }
 ```
@@ -123,23 +117,21 @@ Get details for a single class.
 
 ---
 
-### Enrollment
+### User Registration (Protected)
 
-#### `POST /v1/users/:user_id/classes`
+#### `POST /v1/users`
 
-Enroll the user in a class. This also grants the user access to the class group chat.
+Register a new user in the database. Called after Firebase account creation.
 
-**Path Parameters:**
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `user_id` | int | The user's ID |
+**Headers:** `Authorization: Bearer <token>`
 
 **Request Body:**
 
 ```json
 {
-  "class_id": 5634161670881280
+  "uid": "firebase_user_id",
+  "email": "user@example.com",
+  "display_name": "John Doe"
 }
 ```
 
@@ -147,9 +139,55 @@ Enroll the user in a class. This also grants the user access to the class group 
 
 ```json
 {
-  "id": 5741031244955648,
-  "user_id": 1,
-  "class_id": 5634161670881280
+  "uid": "firebase_user_id",
+  "email": "user@example.com",
+  "display_name": "John Doe"
+}
+```
+
+**Response: `403 Forbidden`** (UID mismatch)
+
+```json
+{
+  "error": "UID mismatch"
+}
+```
+
+---
+
+### Enrollment (Protected)
+
+#### `POST /v1/users/me/classes`
+
+Enroll the authenticated user in a class. This also grants access to the class group chat.
+
+**Headers:** `Authorization: Bearer <token>`
+
+**Request Body:**
+
+```json
+{
+  "class_id": 1
+}
+```
+
+**Response: `201 Created`**
+
+```json
+{
+  "id": 1,
+  "class_code": "ECS 191",
+  "class_name": "Design Project",
+  "quarter": "W26",
+  "enrollment_id": 1
+}
+```
+
+**Response: `404 Not Found`**
+
+```json
+{
+  "error": "Class not found"
 }
 ```
 
@@ -157,31 +195,17 @@ Enroll the user in a class. This also grants the user access to the class group 
 
 ```json
 {
-  "error": "Already enrolled"
+  "error": "Already enrolled in this class"
 }
-```
-
-**Example Request:**
-
-```bash
-curl -X POST \
-  -H "X-User-Id: 1" \
-  -H "Content-Type: application/json" \
-  -d '{"class_id": 5634161670881280}' \
-  "https://<project-id>.appspot.com/v1/users/1/classes"
 ```
 
 ---
 
-#### `GET /v1/users/:user_id/classes`
+#### `GET /v1/users/me/classes`
 
-Get all classes the user is enrolled in.
+Get all classes the authenticated user is enrolled in.
 
-**Path Parameters:**
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `user_id` | int | The user's ID |
+**Headers:** `Authorization: Bearer <token>`
 
 **Response: `200 OK`**
 
@@ -189,18 +213,11 @@ Get all classes the user is enrolled in.
 {
   "classes": [
     {
-      "id": 5634161670881280,
+      "id": 1,
       "class_code": "ECS 191",
-      "class_name": "Software Design Project",
+      "class_name": "Design Project",
       "quarter": "W26",
-      "enrollment_id": 5741031244955648
-    },
-    {
-      "id": 5634161670881281,
-      "class_code": "ECS 170",
-      "class_name": "Intro to Artificial Intelligence",
-      "quarter": "W26",
-      "enrollment_id": 5741031244955649
+      "enrollment_id": 1
     }
   ]
 }
@@ -208,16 +225,17 @@ Get all classes the user is enrolled in.
 
 ---
 
-#### `DELETE /v1/users/:user_id/classes/:enrollment_id`
+#### `DELETE /v1/users/me/classes/:enrollment_id`
 
-Unenroll the user from a class. This also removes the user from the class group chat.
+Unenroll the authenticated user from a class. This also removes access to the class group chat.
+
+**Headers:** `Authorization: Bearer <token>`
 
 **Path Parameters:**
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `user_id` | int | The user's ID |
-| `enrollment_id` | int | The Datastore key ID of the UserClass enrollment entity |
+| `enrollment_id` | int | The ID of the enrollment record |
 
 **Response: `204 No Content`**
 
@@ -231,36 +249,23 @@ Unenroll the user from a class. This also removes the user from the class group 
 }
 ```
 
-**Example Request:**
-
-```bash
-curl -X DELETE \
-  -H "X-User-Id: 1" \
-  "https://<project-id>.appspot.com/v1/users/1/classes/5741031244955648"
-```
-
 ---
 
-### Chat
+### Chat (Protected + Enrollment Required)
 
-All chat endpoints require the user to be enrolled in the class. If not enrolled, the server returns `403 Forbidden`.
+All chat endpoints require the user to be authenticated AND enrolled in the class. If not enrolled, the server returns `403 Forbidden`.
 
-#### `GET /v1/classes/:class_id/chat/messages`
+#### `GET /v1/classes/:class_id/messages`
 
-Get chat messages for a class group chat. Messages are returned newest first.
+Get chat messages for a class group chat.
+
+**Headers:** `Authorization: Bearer <token>`
 
 **Path Parameters:**
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `class_id` | int | The Datastore key ID of the class |
-
-**Query Parameters:**
-
-| Parameter | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| `limit` | int | No | 50 | Maximum number of messages to return |
-| `before` | string | No | - | ISO 8601 timestamp; only return messages before this time (for pagination) |
+| `class_id` | int | The ID of the class |
 
 **Response: `200 OK`**
 
@@ -268,18 +273,20 @@ Get chat messages for a class group chat. Messages are returned newest first.
 {
   "messages": [
     {
-      "id": 5678901234567890,
-      "chat_id": 5634161670881280,
-      "user_id": 1,
-      "content": "Hey everyone! Who's working on the project?",
-      "timestamp": "2026-01-15T10:30:00.000000"
+      "id": 1,
+      "class_id": 1,
+      "sender_id": "firebase_uid_123",
+      "sender_name": "Alice Chen",
+      "content": "Hey everyone! Anyone want to form a study group?",
+      "timestamp": "2026-01-15T10:30:00Z"
     },
     {
-      "id": 5678901234567891,
-      "chat_id": 5634161670881280,
-      "user_id": 2,
-      "content": "I am! Want to meet up?",
-      "timestamp": "2026-01-15T10:28:00.000000"
+      "id": 2,
+      "class_id": 1,
+      "sender_id": "firebase_uid_456",
+      "sender_name": "Bob Martinez",
+      "content": "I'm in! When were you thinking?",
+      "timestamp": "2026-01-15T10:35:00Z"
     }
   ]
 }
@@ -293,38 +300,25 @@ Get chat messages for a class group chat. Messages are returned newest first.
 }
 ```
 
-**Example Request:**
-
-```bash
-curl -H "X-User-Id: 1" \
-  "https://<project-id>.appspot.com/v1/classes/5634161670881280/chat/messages?limit=20"
-```
-
-**Pagination Example:**
-
-```bash
-# Fetch the next page of messages (before the oldest message's timestamp)
-curl -H "X-User-Id: 1" \
-  "https://<project-id>.appspot.com/v1/classes/5634161670881280/chat/messages?limit=20&before=2026-01-15T10:28:00.000000"
-```
-
 ---
 
-#### `POST /v1/classes/:class_id/chat/messages`
+#### `POST /v1/classes/:class_id/messages`
 
 Send a message to the class group chat.
+
+**Headers:** `Authorization: Bearer <token>`
 
 **Path Parameters:**
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `class_id` | int | The Datastore key ID of the class |
+| `class_id` | int | The ID of the class |
 
 **Request Body:**
 
 ```json
 {
-  "content": "Hey everyone! Who's working on the project?"
+  "content": "Hey everyone!"
 }
 ```
 
@@ -332,68 +326,20 @@ Send a message to the class group chat.
 
 ```json
 {
-  "id": 5678901234567890,
-  "chat_id": 5634161670881280,
-  "user_id": 1,
-  "content": "Hey everyone! Who's working on the project?",
-  "timestamp": "2026-01-15T10:30:00.000000"
+  "id": 5,
+  "class_id": 1,
+  "sender_id": "firebase_uid_123",
+  "sender_name": "John Doe",
+  "content": "Hey everyone!",
+  "timestamp": "2026-01-15T11:00:00Z"
 }
 ```
 
-**Response: `400 Bad Request`** (empty or blank message)
+**Response: `400 Bad Request`** (empty message)
 
 ```json
 {
-  "error": "Message content cannot be empty"
-}
-```
-
-**Response: `403 Forbidden`**
-
-```json
-{
-  "error": "Not enrolled in this class"
-}
-```
-
-**Example Request:**
-
-```bash
-curl -X POST \
-  -H "X-User-Id: 1" \
-  -H "Content-Type: application/json" \
-  -d '{"content": "Hey everyone! Who'\''s working on the project?"}' \
-  "https://<project-id>.appspot.com/v1/classes/5634161670881280/chat/messages"
-```
-
----
-
-#### `GET /v1/classes/:class_id/chat/members`
-
-List all members of a class group chat (i.e., all users enrolled in the class).
-
-**Path Parameters:**
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `class_id` | int | The Datastore key ID of the class |
-
-**Response: `200 OK`**
-
-```json
-{
-  "members": [
-    {
-      "id": 1,
-      "name": "Shuaib Ahmed",
-      "email": "sahmed@ucdavis.edu"
-    },
-    {
-      "id": 2,
-      "name": "Isa Bukhari",
-      "email": "ibukhari@ucdavis.edu"
-    }
-  ]
+  "error": "content is required"
 }
 ```
 
@@ -411,7 +357,7 @@ List all members of a class group chat (i.e., all users enrolled in the class).
 
 #### `POST /v1/seed`
 
-Populate the database with seed data (~13 UC Davis CS classes). This endpoint is idempotent -- it skips classes that already exist.
+Populate the database with seed data (~13 UC Davis CS classes). **No authentication required.**
 
 **Request Body:** None
 
@@ -423,11 +369,20 @@ Populate the database with seed data (~13 UC Davis CS classes). This endpoint is
 }
 ```
 
-**Example Request:**
+---
 
-```bash
-curl -X POST \
-  "https://<project-id>.appspot.com/v1/seed"
+### Health Check
+
+#### `GET /health`
+
+Check if the server is running. **No authentication required.**
+
+**Response: `200 OK`**
+
+```json
+{
+  "status": "healthy"
+}
 ```
 
 ---
@@ -436,12 +391,13 @@ curl -X POST \
 
 | Method | Path | Description | Auth |
 |--------|------|-------------|------|
-| `GET` | `/v1/classes` | List all classes (optional `?q=` search) | Yes |
-| `GET` | `/v1/classes/:class_id` | Get single class | Yes |
-| `POST` | `/v1/users/:user_id/classes` | Enroll in a class | Yes |
-| `GET` | `/v1/users/:user_id/classes` | Get user's enrolled classes | Yes |
-| `DELETE` | `/v1/users/:user_id/classes/:enrollment_id` | Unenroll from a class | Yes |
-| `GET` | `/v1/classes/:class_id/chat/messages` | Get chat messages | Yes + Enrolled |
-| `POST` | `/v1/classes/:class_id/chat/messages` | Send a chat message | Yes + Enrolled |
-| `GET` | `/v1/classes/:class_id/chat/members` | List chat members | Yes + Enrolled |
+| `GET` | `/v1/classes` | List all classes | No |
+| `GET` | `/v1/classes/:id` | Get single class | No |
+| `POST` | `/v1/users` | Register new user | Yes |
+| `GET` | `/v1/users/me/classes` | Get enrolled classes | Yes |
+| `POST` | `/v1/users/me/classes` | Enroll in a class | Yes |
+| `DELETE` | `/v1/users/me/classes/:id` | Unenroll from a class | Yes |
+| `GET` | `/v1/classes/:id/messages` | Get chat messages | Yes + Enrolled |
+| `POST` | `/v1/classes/:id/messages` | Send a chat message | Yes + Enrolled |
 | `POST` | `/v1/seed` | Seed database (dev only) | No |
+| `GET` | `/health` | Health check | No |
