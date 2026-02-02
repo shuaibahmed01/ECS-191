@@ -1,0 +1,36 @@
+"""CourseHub Flask application."""
+
+from flask import Flask, jsonify
+from api.classes import classes_bp
+from api.chat import chat_bp
+from services.datastore_service import seed_classes_in_memory
+
+
+def create_app():
+    """Create and configure the Flask application."""
+    app = Flask(__name__)
+
+    # Register blueprints with /v1 prefix
+    app.register_blueprint(classes_bp, url_prefix="/v1")
+    app.register_blueprint(chat_bp, url_prefix="/v1")
+
+    @app.route("/v1/seed", methods=["POST"])
+    def seed():
+        """Seed the database with initial class data."""
+        count = seed_classes_in_memory()
+        return jsonify({"message": f"Seeded {count} classes"})
+
+    @app.route("/health", methods=["GET"])
+    def health():
+        """Health check endpoint."""
+        return jsonify({"status": "healthy"})
+
+    return app
+
+
+# Create the app instance for gunicorn
+app = create_app()
+
+
+if __name__ == "__main__":
+    app.run(debug=True, port=5001)
