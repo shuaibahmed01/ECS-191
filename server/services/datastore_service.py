@@ -1,0 +1,100 @@
+"""In-memory data service for CourseHub (M0 implementation)."""
+
+from seed_data import SEED_CLASSES
+
+# In-memory storage
+_classes = {}        # id -> class dict
+_enrollments = {}    # id -> enrollment dict
+_next_enrollment_id = 1
+
+
+def seed_classes_in_memory():
+    """Load seed data into memory."""
+    global _classes
+    _classes = {c["id"]: c.copy() for c in SEED_CLASSES}
+    return len(_classes)
+
+
+def get_all_classes(query=""):
+    """Return all classes, optionally filtered by query string."""
+    classes = list(_classes.values())
+    if query:
+        query_lower = query.lower()
+        classes = [
+            c for c in classes
+            if query_lower in c["class_code"].lower()
+            or query_lower in c["class_name"].lower()
+        ]
+    return classes
+
+
+def get_class_by_id(class_id):
+    """Return a single class by ID, or None if not found."""
+    return _classes.get(class_id)
+
+
+def enroll_user(user_id, class_id):
+    """
+    Create an enrollment for a user in a class.
+    Returns the enrollment dict, or None if already enrolled.
+    """
+    global _next_enrollment_id
+
+    # Check if class exists
+    if class_id not in _classes:
+        return None
+
+    # Check if already enrolled
+    if is_user_enrolled(user_id, class_id):
+        return None
+
+    enrollment = {
+        "id": _next_enrollment_id,
+        "user_id": user_id,
+        "class_id": class_id
+    }
+    _enrollments[_next_enrollment_id] = enrollment
+    _next_enrollment_id += 1
+
+    return enrollment
+
+
+def get_user_classes(user_id):
+    """Return all classes a user is enrolled in, with enrollment_id."""
+    user_enrollments = [
+        e for e in _enrollments.values()
+        if e["user_id"] == user_id
+    ]
+
+    result = []
+    for enrollment in user_enrollments:
+        class_data = _classes.get(enrollment["class_id"])
+        if class_data:
+            entry = class_data.copy()
+            entry["enrollment_id"] = enrollment["id"]
+            result.append(entry)
+
+    return result
+
+
+def unenroll_user(user_id, enrollment_id):
+    """
+    Delete an enrollment.
+    Returns True if successful, False if not found or not owned by user.
+    """
+    enrollment = _enrollments.get(enrollment_id)
+    if not enrollment:
+        return False
+    if enrollment["user_id"] != user_id:
+        return False
+
+    del _enrollments[enrollment_id]
+    return True
+
+
+def is_user_enrolled(user_id, class_id):
+    """Check if a user is enrolled in a specific class."""
+    for enrollment in _enrollments.values():
+        if enrollment["user_id"] == user_id and enrollment["class_id"] == class_id:
+            return True
+    return False

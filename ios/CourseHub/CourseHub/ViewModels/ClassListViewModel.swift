@@ -1,0 +1,44 @@
+import Foundation
+
+@Observable
+class ClassListViewModel {
+    var allClasses: [CourseClass] = []
+    var searchText: String = ""
+    var isLoading: Bool = false
+    var errorMessage: String?
+
+    var filteredClasses: [CourseClass] {
+        if searchText.isEmpty {
+            return allClasses
+        }
+        return allClasses.filter { course in
+            course.classCode.localizedCaseInsensitiveContains(searchText) ||
+            course.className.localizedCaseInsensitiveContains(searchText)
+        }
+    }
+
+    @MainActor
+    func loadClasses() async {
+        isLoading = true
+        errorMessage = nil
+
+        do {
+            allClasses = try await APIClient.shared.fetchClasses()
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+
+        isLoading = false
+    }
+
+    @MainActor
+    func addClass(classId: Int) async {
+        errorMessage = nil
+
+        do {
+            _ = try await APIClient.shared.enrollInClass(classId: classId)
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+}
