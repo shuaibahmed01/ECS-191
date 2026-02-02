@@ -5,5 +5,5 @@
 xcuserdata/
 *.xcuserdatad/
 
-# Optional: Firebase iOS config (teammates can download from Firebase Console)
-# GoogleService-Info.plist
+# Firebase iOS config (teammates can download from Firebase Console)
+GoogleService-Info.plist

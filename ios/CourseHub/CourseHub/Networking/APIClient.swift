@@ -134,7 +134,7 @@ class APIClient {
         return response.classes
     }
 
-    func unenroll(enrollmentId: Int) async throws {
+    func unenroll(enrollmentId: String) async throws {
         guard let url = URL(string: "\(baseURL)/users/me/classes/\(enrollmentId)") else {
             throw APIError.invalidURL
         }

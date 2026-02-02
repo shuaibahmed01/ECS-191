@@ -1,15 +1,24 @@
-"""In-memory data service for CourseHub (M0 implementation)."""
+"""Data service for CourseHub with Firestore for enrollments."""
 
 from datetime import datetime, timezone
 from seed_data import SEED_CLASSES, SEED_MESSAGES
+from firebase_admin import firestore
 
-# In-memory storage
+# In-memory storage (for seed data)
 _classes = {}        # id -> class dict
-_enrollments = {}    # id -> enrollment dict
 _messages = {}       # id -> message dict
 _users = {}          # uid (string) -> user dict
-_next_enrollment_id = 1
 _next_message_id = 1
+
+# Firestore client (initialized lazily)
+_db = None
+
+def _get_db():
+    """Get Firestore client, initializing if needed."""
+    global _db
+    if _db is None:
+        _db = firestore.client()
+    return _db
 
 
 def seed_classes_in_memory():
@@ -53,7 +62,7 @@ def enroll_user(user_id, class_id):
     Create an enrollment for a user in a class.
     Returns the enrollment dict, or None if already enrolled.
     """
-    global _next_enrollment_id
+    db = _get_db()
 
     # Check if class exists
     if class_id not in _classes:
@@ -63,30 +72,36 @@ def enroll_user(user_id, class_id):
     if is_user_enrolled(user_id, class_id):
         return None
 
-    enrollment = {
-        "id": _next_enrollment_id,
+    # Create enrollment in Firestore
+    enrollment_ref = db.collection('users').document(user_id).collection('enrollments').document()
+    enrollment_data = {
+        "class_id": class_id,
+        "enrolled_at": firestore.SERVER_TIMESTAMP
+    }
+    enrollment_ref.set(enrollment_data)
+
+    return {
+        "id": enrollment_ref.id,
         "user_id": user_id,
         "class_id": class_id
     }
-    _enrollments[_next_enrollment_id] = enrollment
-    _next_enrollment_id += 1
-
-    return enrollment
 
 
 def get_user_classes(user_id):
     """Return all classes a user is enrolled in, with enrollment_id."""
-    user_enrollments = [
-        e for e in _enrollments.values()
-        if e["user_id"] == user_id
-    ]
+    db = _get_db()
+
+    # Get enrollments from Firestore
+    enrollments_ref = db.collection('users').document(user_id).collection('enrollments')
+    enrollments = enrollments_ref.stream()
 
     result = []
-    for enrollment in user_enrollments:
-        class_data = _classes.get(enrollment["class_id"])
+    for enrollment in enrollments:
+        enrollment_data = enrollment.to_dict()
+        class_data = _classes.get(enrollment_data["class_id"])
         if class_data:
             entry = class_data.copy()
-            entry["enrollment_id"] = enrollment["id"]
+            entry["enrollment_id"] = enrollment.id
             result.append(entry)
 
     return result
@@ -97,22 +112,30 @@ def unenroll_user(user_id, enrollment_id):
     Delete an enrollment.
     Returns True if successful, False if not found or not owned by user.
     """
-    enrollment = _enrollments.get(enrollment_id)
-    if not enrollment:
-        return False
-    if enrollment["user_id"] != user_id:
+    db = _get_db()
+
+    # Get the enrollment document
+    enrollment_ref = db.collection('users').document(user_id).collection('enrollments').document(str(enrollment_id))
+    enrollment_doc = enrollment_ref.get()
+
+    if not enrollment_doc.exists:
         return False
 
-    del _enrollments[enrollment_id]
+    # Delete the enrollment
+    enrollment_ref.delete()
     return True
 
 
 def is_user_enrolled(user_id, class_id):
     """Check if a user is enrolled in a specific class."""
-    for enrollment in _enrollments.values():
-        if enrollment["user_id"] == user_id and enrollment["class_id"] == class_id:
-            return True
-    return False
+    db = _get_db()
+
+    # Query Firestore for matching enrollment
+    enrollments_ref = db.collection('users').document(user_id).collection('enrollments')
+    query = enrollments_ref.where("class_id", "==", class_id).limit(1)
+    results = list(query.stream())
+
+    return len(results) > 0
 
 
 def get_messages_for_class(class_id):
