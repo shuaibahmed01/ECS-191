@@ -2,7 +2,7 @@
 
 A mobile app for UC Davis students to manage their class schedules and communicate with classmates. Students can browse courses, add them to their schedule, and chat with others in each class.
 
-## Features
+## Features 
 
 - **Authentication**: Sign up and sign in with email/password
 - **Browse Classes**: View all available UC Davis CS courses for the current quarter
