@@ -1,7 +1,6 @@
 """Tests for chat API endpoints."""
 
 import json
-from unittest.mock import patch
 from services.datastore_service import create_user
 
 
@@ -28,16 +27,6 @@ class TestGetMessages:
         assert "messages" in data
         assert isinstance(data["messages"], list)
 
-    def test_get_messages_for_class_with_seed_data(self, auth_client):
-        """Should return seed messages for ecs_032a."""
-        auth_client.post("/v1/users/me/classes",
-            data=json.dumps({"class_id": "ecs_032a"}),
-            content_type="application/json"
-        )
-        response = auth_client.get("/v1/classes/ecs_032a/messages")
-        data = json.loads(response.data)
-        assert len(data["messages"]) == 4  # ecs_032a has 4 seed messages
-
     def test_get_messages_for_class_without_messages(self, auth_client):
         """Should return empty list for class with no messages."""
         auth_client.post("/v1/users/me/classes",
@@ -50,8 +39,15 @@ class TestGetMessages:
 
     def test_get_messages_contains_required_fields(self, auth_client):
         """Should return messages with all required fields."""
+        create_user("test_user", "test@test.com", "Test User")
         auth_client.post("/v1/users/me/classes",
             data=json.dumps({"class_id": "ecs_032a"}),
+            content_type="application/json"
+        )
+        # Post a message first
+        auth_client.post(
+            "/v1/classes/ecs_032a/messages",
+            data=json.dumps({"content": "Hello!"}),
             content_type="application/json"
         )
         response = auth_client.get("/v1/classes/ecs_032a/messages")
@@ -67,8 +63,20 @@ class TestGetMessages:
 
     def test_get_messages_sorted_by_timestamp(self, auth_client):
         """Messages should be sorted by timestamp."""
+        create_user("test_user", "test@test.com", "Test User")
         auth_client.post("/v1/users/me/classes",
             data=json.dumps({"class_id": "ecs_032a"}),
+            content_type="application/json"
+        )
+        # Post multiple messages
+        auth_client.post(
+            "/v1/classes/ecs_032a/messages",
+            data=json.dumps({"content": "First"}),
+            content_type="application/json"
+        )
+        auth_client.post(
+            "/v1/classes/ecs_032a/messages",
+            data=json.dumps({"content": "Second"}),
             content_type="application/json"
         )
         response = auth_client.get("/v1/classes/ecs_032a/messages")
@@ -114,7 +122,6 @@ class TestPostMessage:
         assert data["sender_name"] == "Test User"
         assert data["class_id"] == "ecs_032a"
         assert "id" in data
-        assert "timestamp" in data
 
     def test_post_message_missing_content(self, auth_client):
         """Should return 400 when content is missing."""
@@ -187,13 +194,11 @@ class TestChatAuthorization:
 
     def test_cannot_read_messages_without_enrollment(self, auth_client):
         """Should return 403 when not enrolled in class."""
-        # Use a fresh user that hasn't enrolled in anything
         response = auth_client.get("/v1/classes/ecs_036c/messages", uid="unenrolled_user")
         assert response.status_code == 403
 
     def test_cannot_post_messages_without_enrollment(self, auth_client):
         """Should return 403 when posting to class not enrolled in."""
-        # Use a fresh user that hasn't enrolled in anything
         response = auth_client.post(
             "/v1/classes/ecs_036c/messages",
             uid="unenrolled_user",

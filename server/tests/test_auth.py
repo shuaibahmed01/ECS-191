@@ -6,14 +6,14 @@ import json
 class TestPublicEndpoints:
     """Tests for endpoints that don't require authentication."""
 
-    def test_list_classes_no_auth(self, seeded_client):
+    def test_list_classes_no_auth(self, client):
         """GET /v1/classes should work without auth."""
-        response = seeded_client.get("/v1/classes")
+        response = client.get("/v1/classes")
         assert response.status_code == 200
 
-    def test_get_class_no_auth(self, seeded_client):
+    def test_get_class_no_auth(self, client):
         """GET /v1/classes/<id> should work without auth."""
-        response = seeded_client.get("/v1/classes/ecs_032a")
+        response = client.get("/v1/classes/ecs_032a")
         assert response.status_code == 200
 
     def test_health_check(self, client):
@@ -25,33 +25,33 @@ class TestPublicEndpoints:
 class TestProtectedEndpoints:
     """Tests for endpoints that require authentication."""
 
-    def test_get_my_classes_requires_auth(self, seeded_client):
+    def test_get_my_classes_requires_auth(self, client):
         """GET /v1/users/me/classes should return 401 without auth."""
-        response = seeded_client.get("/v1/users/me/classes")
+        response = client.get("/v1/users/me/classes")
         assert response.status_code == 401
 
-    def test_enroll_requires_auth(self, seeded_client):
+    def test_enroll_requires_auth(self, client):
         """POST /v1/users/me/classes should return 401 without auth."""
-        response = seeded_client.post(
+        response = client.post(
             "/v1/users/me/classes",
             data=json.dumps({"class_id": "ecs_032a"}),
             content_type="application/json"
         )
         assert response.status_code == 401
 
-    def test_unenroll_requires_auth(self, seeded_client):
+    def test_unenroll_requires_auth(self, client):
         """DELETE /v1/users/me/classes/<id> should return 401 without auth."""
-        response = seeded_client.delete("/v1/users/me/classes/1")
+        response = client.delete("/v1/users/me/classes/1")
         assert response.status_code == 401
 
-    def test_get_messages_requires_auth(self, seeded_client):
+    def test_get_messages_requires_auth(self, client):
         """GET /v1/classes/<id>/messages should return 401 without auth."""
-        response = seeded_client.get("/v1/classes/ecs_032a/messages")
+        response = client.get("/v1/classes/ecs_032a/messages")
         assert response.status_code == 401
 
-    def test_post_message_requires_auth(self, seeded_client):
+    def test_post_message_requires_auth(self, client):
         """POST /v1/classes/<id>/messages should return 401 without auth."""
-        response = seeded_client.post(
+        response = client.post(
             "/v1/classes/ecs_032a/messages",
             data=json.dumps({"content": "Hello"}),
             content_type="application/json"

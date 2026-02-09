@@ -230,7 +230,6 @@ Protected endpoints:
 Public endpoints (no auth required):
 - `GET /v1/classes` - List all classes
 - `GET /v1/classes/:id` - Get a single class
-- `POST /v1/seed` - Seed the database
 
 ## Implementation Details
 

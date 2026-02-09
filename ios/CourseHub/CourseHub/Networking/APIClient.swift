@@ -43,7 +43,7 @@ struct UserClassListResponse: Codable {
 }
 
 struct MessageListResponse: Codable {
-    let messages: [ChatMessage]
+    let messages: [ChatMessageResponse]
 }
 
 class APIClient {
@@ -157,21 +157,7 @@ class APIClient {
         }
     }
 
-    func seedDatabase() async {
-        guard let url = URL(string: "\(baseURL)/seed") else { return }
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        try? await URLSession.shared.data(for: request)
-    }
-
-    func fetchMessages(classId: String) async throws -> [ChatMessage] {
-        let response: MessageListResponse = try await request(
-            endpoint: "/classes/\(classId)/messages"
-        )
-        return response.messages
-    }
-
-    func sendMessage(classId: String, content: String) async throws -> ChatMessage {
+    func sendMessage(classId: String, content: String) async throws -> ChatMessageResponse {
         let body = try JSONEncoder().encode([
             "content": content
         ])

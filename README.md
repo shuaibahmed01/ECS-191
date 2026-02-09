@@ -17,7 +17,8 @@ A mobile app for UC Davis students to manage their class schedules and communica
 - **Frontend**: SwiftUI (iOS 17+)
 - **Backend**: Flask (Python 3.12)
 - **Authentication**: Firebase Authentication
-- **Data**: In-memory storage (Milestone 0)
+- **Database**: Firestore (courses, users, enrollments, and chat messages)
+- **Real-Time Chat**: Firestore snapshot listeners (iOS reads directly from Firestore)
 
 ## Getting Started
 
@@ -77,7 +78,6 @@ open ios/CourseHub/CourseHub.xcodeproj
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| POST | `/v1/seed` | Seed database with courses |
 | GET | `/v1/classes` | List all classes |
 | GET | `/v1/classes?q=<query>` | Search classes |
 | GET | `/v1/classes/<id>` | Get single class |
@@ -107,7 +107,7 @@ All protected endpoints require header: `Authorization: Bearer <firebase_id_toke
 │   │   ├── datastore_service.py  # Data layer
 │   │   └── auth_service.py       # Firebase token verification
 │   ├── main.py
-│   ├── seed_data.py
+│   ├── tests/                   # Pytest test suite
 │   └── requirements.txt
 │
 └── ios/CourseHub/

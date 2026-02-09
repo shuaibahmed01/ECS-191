@@ -1,6 +1,7 @@
 """Pytest fixtures for CourseHub tests."""
 
 import pytest
+from datetime import datetime, timezone
 from unittest.mock import patch, MagicMock
 
 
@@ -35,9 +36,10 @@ def _mock_get_class_by_id(class_id):
     return {"id": class_id, "class_code": data["code"], "class_name": data["name"]}
 
 
-def _create_mock_db(enrollments_store, users_store):
-    """Create a mock Firestore DB that handles enrollment and user operations."""
+def _create_mock_db(enrollments_store, users_store, messages_store):
+    """Create a mock Firestore DB that handles enrollment, user, and message operations."""
     db_instance = MagicMock()
+    _next_msg_id = [0]  # mutable counter for auto-generated doc IDs
 
     def setup_user_enrollments(user_id):
         if user_id not in enrollments_store:
@@ -157,6 +159,53 @@ def _create_mock_db(enrollments_store, users_store):
 
                 doc_mock.get = mock_course_get
 
+            elif name == 'classes':
+                # Mock classes/{class_id} document for messages subcollection
+                class_id = doc_id
+
+                def mock_messages_subcollection(sub_name):
+                    if sub_name == 'messages':
+                        msgs_mock = MagicMock()
+
+                        if class_id not in messages_store:
+                            messages_store[class_id] = {}
+
+                        def mock_order_by(field):
+                            order_mock = MagicMock()
+
+                            def mock_order_stream():
+                                items = list(messages_store.get(class_id, {}).items())
+                                items.sort(key=lambda x: x[1].get("timestamp", ""))
+                                results = []
+                                for mid, mdata in items:
+                                    doc = MagicMock()
+                                    doc.id = mid
+                                    doc.to_dict.return_value = mdata
+                                    results.append(doc)
+                                return iter(results)
+
+                            order_mock.stream = mock_order_stream
+                            return order_mock
+
+                        def mock_add(data):
+                            _next_msg_id[0] += 1
+                            msg_id = f"msg_{_next_msg_id[0]}"
+                            stored = data.copy()
+                            # Replace SERVER_TIMESTAMP sentinel with actual timestamp
+                            if not isinstance(stored.get("timestamp"), str):
+                                stored["timestamp"] = datetime.now(timezone.utc)
+                            messages_store.setdefault(class_id, {})[msg_id] = stored
+                            ref_mock = MagicMock()
+                            ref_mock.id = msg_id
+                            return (None, ref_mock)
+
+                        msgs_mock.order_by = mock_order_by
+                        msgs_mock.add = mock_add
+                        return msgs_mock
+                    return MagicMock()
+
+                doc_mock.collection = mock_messages_subcollection
+
             return doc_mock
 
         def mock_stream():
@@ -184,11 +233,12 @@ def app():
     """Create application for testing with mocked Firebase."""
     enrollments_store = {}
     users_store = {}
+    messages_store = {}
 
     with patch('services.auth_service.init_firebase'), \
          patch('services.datastore_service._get_db') as mock_db:
 
-        mock_db.return_value = _create_mock_db(enrollments_store, users_store)
+        mock_db.return_value = _create_mock_db(enrollments_store, users_store, messages_store)
 
         from main import create_app
         app = create_app()
@@ -203,13 +253,6 @@ def client(app):
 
 
 @pytest.fixture
-def seeded_client(client):
-    """Create a test client with seeded data."""
-    client.post("/v1/seed")
-    return client
-
-
-@pytest.fixture
 def auth_client(client):
     """
     Create a test client with auth helper.
@@ -218,8 +261,6 @@ def auth_client(client):
         def test_something(auth_client):
             response = auth_client.get('/v1/users/me/classes', uid='user123')
     """
-    client.post("/v1/seed")
-
     class AuthClient:
         def __init__(self, test_client):
             self._client = test_client

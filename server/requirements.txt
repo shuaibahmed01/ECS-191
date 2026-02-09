@@ -1,5 +1,4 @@
 Flask==3.0.*
 gunicorn==21.*
-google-cloud-datastore==2.*
 pytest==8.*
 firebase-admin==6.*
