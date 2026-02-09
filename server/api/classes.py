@@ -14,7 +14,7 @@ def list_classes():
     return jsonify({"classes": classes})
 
 
-@classes_bp.route("/classes/<int:class_id>", methods=["GET"])
+@classes_bp.route("/classes/<class_id>", methods=["GET"])
 def get_class(class_id):
     """Get a single class by ID. No auth required."""
     class_data = get_class_by_id(class_id)

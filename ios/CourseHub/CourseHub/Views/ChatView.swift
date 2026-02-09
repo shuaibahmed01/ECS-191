@@ -4,7 +4,7 @@ struct ChatView: View {
     @State private var viewModel: ChatViewModel
     let classCode: String
 
-    init(classId: Int, classCode: String) {
+    init(classId: String, classCode: String) {
         self._viewModel = State(initialValue: ChatViewModel(classId: classId))
         self.classCode = classCode
     }
@@ -128,6 +128,6 @@ struct MessageBubble: View {
 
 #Preview {
     NavigationStack {
-        ChatView(classId: 1, classCode: "ECS 032A")
+        ChatView(classId: "ecs_032a", classCode: "ECS 032A")
     }
 }

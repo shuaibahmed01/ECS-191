@@ -12,7 +12,7 @@ from services.auth_service import require_auth
 chat_bp = Blueprint("chat", __name__)
 
 
-@chat_bp.route("/classes/<int:class_id>/messages", methods=["GET"])
+@chat_bp.route("/classes/<class_id>/messages", methods=["GET"])
 @require_auth
 def get_messages(class_id):
     """Get all messages for a class. Requires authentication and enrollment."""
@@ -24,7 +24,7 @@ def get_messages(class_id):
     return jsonify({"messages": messages})
 
 
-@chat_bp.route("/classes/<int:class_id>/messages", methods=["POST"])
+@chat_bp.route("/classes/<class_id>/messages", methods=["POST"])
 @require_auth
 def post_message(class_id):
     """Post a new message to a class chat. Requires authentication and enrollment."""

@@ -9,7 +9,7 @@ class ChatViewModel {
     var isSending: Bool = false
     var errorMessage: String?
 
-    private let classId: Int
+    private let classId: String
 
     var currentUserName: String {
         Auth.auth().currentUser?.displayName ?? "Me"
@@ -19,7 +19,7 @@ class ChatViewModel {
         Auth.auth().currentUser?.uid
     }
 
-    init(classId: Int) {
+    init(classId: String) {
         self.classId = classId
     }
 

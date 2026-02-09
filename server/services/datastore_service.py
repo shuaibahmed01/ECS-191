@@ -1,13 +1,11 @@
-"""Data service for CourseHub with Firestore for enrollments."""
+"""Data service for CourseHub with Firestore for enrollments and courses."""
 
 from datetime import datetime, timezone
-from seed_data import SEED_CLASSES, SEED_MESSAGES
+from seed_data import SEED_MESSAGES
 from firebase_admin import firestore
 
-# In-memory storage (for seed data)
-_classes = {}        # id -> class dict
+# In-memory storage (for messages)
 _messages = {}       # id -> message dict
-_users = {}          # uid (string) -> user dict
 _next_message_id = 1
 
 # Firestore client (initialized lazily)
@@ -21,14 +19,6 @@ def _get_db():
     return _db
 
 
-def seed_classes_in_memory():
-    """Load seed data into memory."""
-    global _classes
-    _classes = {c["id"]: c.copy() for c in SEED_CLASSES}
-    seed_messages_in_memory()
-    return len(_classes)
-
-
 def seed_messages_in_memory():
     """Load seed messages into memory."""
     global _messages, _next_message_id
@@ -40,8 +30,21 @@ def seed_messages_in_memory():
 
 
 def get_all_classes(query=""):
-    """Return all classes, optionally filtered by query string."""
-    classes = list(_classes.values())
+    """Return all classes from Firestore, optionally filtered by query string."""
+    db = _get_db()
+    docs = db.collection("courses").stream()
+
+    classes = []
+    for doc in docs:
+        data = doc.to_dict()
+        classes.append({
+            "id": doc.id,
+            "class_code": data.get("code", ""),
+            "class_name": data.get("name", ""),
+            "lecture_times": data.get("lecture_times", []),
+            "discussion_times": data.get("discussion_times", []),
+        })
+
     if query:
         query_lower = query.lower()
         classes = [
@@ -53,8 +56,19 @@ def get_all_classes(query=""):
 
 
 def get_class_by_id(class_id):
-    """Return a single class by ID, or None if not found."""
-    return _classes.get(class_id)
+    """Return a single class by Firestore document ID, or None if not found."""
+    db = _get_db()
+    doc = db.collection("courses").document(class_id).get()
+    if not doc.exists:
+        return None
+    data = doc.to_dict()
+    return {
+        "id": doc.id,
+        "class_code": data.get("code", ""),
+        "class_name": data.get("name", ""),
+        "lecture_times": data.get("lecture_times", []),
+        "discussion_times": data.get("discussion_times", []),
+    }
 
 
 def enroll_user(user_id, class_id):
@@ -65,7 +79,7 @@ def enroll_user(user_id, class_id):
     db = _get_db()
 
     # Check if class exists
-    if class_id not in _classes:
+    if get_class_by_id(class_id) is None:
         return None
 
     # Check if already enrolled
@@ -98,7 +112,7 @@ def get_user_classes(user_id):
     result = []
     for enrollment in enrollments:
         enrollment_data = enrollment.to_dict()
-        class_data = _classes.get(enrollment_data["class_id"])
+        class_data = get_class_by_id(enrollment_data["class_id"])
         if class_data:
             entry = class_data.copy()
             entry["enrollment_id"] = enrollment.id
@@ -173,18 +187,23 @@ def create_message(class_id, sender_id, sender_name, content):
 
 def create_user(uid, email, display_name):
     """
-    Create or update a user in the database.
+    Create or update a user in Firestore.
     Returns the user dict.
     """
+    db = _get_db()
     user = {
         "uid": uid,
         "email": email,
         "display_name": display_name
     }
-    _users[uid] = user
+    db.collection('users').document(uid).set(user, merge=True)
     return user
 
 
 def get_user_by_id(uid):
     """Return a user by their Firebase UID, or None if not found."""
-    return _users.get(uid)
+    db = _get_db()
+    doc = db.collection('users').document(uid).get()
+    if not doc.exists:
+        return None
+    return doc.to_dict()

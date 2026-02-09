@@ -13,7 +13,7 @@ class TestPublicEndpoints:
 
     def test_get_class_no_auth(self, seeded_client):
         """GET /v1/classes/<id> should work without auth."""
-        response = seeded_client.get("/v1/classes/1")
+        response = seeded_client.get("/v1/classes/ecs_032a")
         assert response.status_code == 200
 
     def test_health_check(self, client):
@@ -34,7 +34,7 @@ class TestProtectedEndpoints:
         """POST /v1/users/me/classes should return 401 without auth."""
         response = seeded_client.post(
             "/v1/users/me/classes",
-            data=json.dumps({"class_id": 1}),
+            data=json.dumps({"class_id": "ecs_032a"}),
             content_type="application/json"
         )
         assert response.status_code == 401
@@ -46,13 +46,13 @@ class TestProtectedEndpoints:
 
     def test_get_messages_requires_auth(self, seeded_client):
         """GET /v1/classes/<id>/messages should return 401 without auth."""
-        response = seeded_client.get("/v1/classes/1/messages")
+        response = seeded_client.get("/v1/classes/ecs_032a/messages")
         assert response.status_code == 401
 
     def test_post_message_requires_auth(self, seeded_client):
         """POST /v1/classes/<id>/messages should return 401 without auth."""
         response = seeded_client.post(
-            "/v1/classes/1/messages",
+            "/v1/classes/ecs_032a/messages",
             data=json.dumps({"content": "Hello"}),
             content_type="application/json"
         )
@@ -66,20 +66,20 @@ class TestEnrollment:
         """Should enroll user when authenticated."""
         response = auth_client.post(
             "/v1/users/me/classes",
-            data=json.dumps({"class_id": 1}),
+            data=json.dumps({"class_id": "ecs_032a"}),
             content_type="application/json"
         )
         assert response.status_code == 201
         data = json.loads(response.data)
         assert "enrollment_id" in data
-        assert data["id"] == 1
+        assert data["id"] == "ecs_032a"
 
     def test_get_enrolled_classes(self, auth_client):
         """Should return enrolled classes for authenticated user."""
         # Enroll first
         auth_client.post(
             "/v1/users/me/classes",
-            data=json.dumps({"class_id": 1}),
+            data=json.dumps({"class_id": "ecs_032a"}),
             content_type="application/json"
         )
 
@@ -91,24 +91,24 @@ class TestEnrollment:
 
     def test_users_have_separate_enrollments(self, auth_client):
         """Different users should have separate enrollment lists."""
-        # User 1 enrolls in class 1
+        # User 1 enrolls in class ecs_032a
         auth_client.post(
             "/v1/users/me/classes",
             uid="user1",
-            data=json.dumps({"class_id": 1}),
+            data=json.dumps({"class_id": "ecs_032a"}),
             content_type="application/json"
         )
 
-        # User 2 enrolls in class 2
+        # User 2 enrolls in class ecs_032b
         auth_client.post(
             "/v1/users/me/classes",
             uid="user2",
-            data=json.dumps({"class_id": 2}),
+            data=json.dumps({"class_id": "ecs_032b"}),
             content_type="application/json"
         )
 
-        # User 2 should only see class 2
+        # User 2 should only see ecs_032b
         response = auth_client.get("/v1/users/me/classes", uid="user2")
         data = json.loads(response.data)
         assert len(data["classes"]) == 1
-        assert data["classes"][0]["id"] == 2
+        assert data["classes"][0]["id"] == "ecs_032b"
