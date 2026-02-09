@@ -1,5 +1,6 @@
 import Foundation
 import FirebaseAuth
+import FirebaseFirestore
 
 @Observable
 class ChatViewModel {
@@ -10,6 +11,7 @@ class ChatViewModel {
     var errorMessage: String?
 
     private let classId: String
+    private var listener: ListenerRegistration?
 
     var currentUserName: String {
         Auth.auth().currentUser?.displayName ?? "Me"
@@ -23,18 +25,40 @@ class ChatViewModel {
         self.classId = classId
     }
 
-    @MainActor
-    func loadMessages() async {
+    deinit {
+        listener?.remove()
+    }
+
+    func startListening() {
         isLoading = true
         errorMessage = nil
 
-        do {
-            messages = try await APIClient.shared.fetchMessages(classId: classId)
-        } catch {
-            errorMessage = error.localizedDescription
-        }
+        let db = Firestore.firestore()
+        let query = db.collection("classes")
+            .document(classId)
+            .collection("messages")
+            .order(by: "timestamp")
 
-        isLoading = false
+        listener = query.addSnapshotListener { [weak self] snapshot, error in
+            guard let self else { return }
+            self.isLoading = false
+
+            if let error {
+                self.errorMessage = error.localizedDescription
+                return
+            }
+
+            guard let snapshot else { return }
+
+            self.messages = snapshot.documents.compactMap { doc in
+                ChatMessage(document: doc, classId: self.classId)
+            }
+        }
+    }
+
+    func stopListening() {
+        listener?.remove()
+        listener = nil
     }
 
     @MainActor
@@ -46,11 +70,10 @@ class ChatViewModel {
         errorMessage = nil
 
         do {
-            let newMessage = try await APIClient.shared.sendMessage(
+            _ = try await APIClient.shared.sendMessage(
                 classId: classId,
                 content: content
             )
-            messages.append(newMessage)
             messageText = ""
         } catch {
             errorMessage = error.localizedDescription

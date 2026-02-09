@@ -61,19 +61,11 @@ struct ChatView: View {
         }
         .navigationTitle(classCode)
         .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Button {
-                    Task {
-                        await viewModel.loadMessages()
-                    }
-                } label: {
-                    Image(systemName: "arrow.clockwise")
-                }
-            }
+        .onAppear {
+            viewModel.startListening()
         }
-        .task {
-            await viewModel.loadMessages()
+        .onDisappear {
+            viewModel.stopListening()
         }
         .overlay {
             if viewModel.isLoading && viewModel.messages.isEmpty {

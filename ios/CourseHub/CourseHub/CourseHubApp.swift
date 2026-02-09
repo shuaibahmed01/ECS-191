@@ -11,11 +11,6 @@ struct CourseHubApp: App {
 
         // Now safe to create AuthViewModel
         _authViewModel = State(initialValue: AuthViewModel())
-
-        // Seed database on app launch
-        Task {
-            await APIClient.shared.seedDatabase()
-        }
     }
 
     var body: some Scene {

@@ -1,12 +1,21 @@
 # Real-Time Firestore Chat: Architecture + Implementation Tasks
 
+**Status: IMPLEMENTED**
+
 ## Goal
 Replace the in-memory chat with real-time, persistent chat using Firestore.
 
-## Current State (Reality)
+## Previous State
 - Classes, users, enrollments: Firestore
 - Chat messages: in-memory (lost on server restart)
 - Chat endpoints: `/v1/classes/<class_id>/messages`
+
+## Current State
+- All data in Firestore (courses, users, enrollments, **messages**)
+- Messages stored in `classes/{class_id}/messages/{message_id}` subcollections
+- iOS client uses Firestore snapshot listeners for real-time updates
+- Server-mediated writes via POST endpoint (enrollment-checked)
+- `/v1/seed` endpoint removed (no longer needed)
 
 ## Target Architecture
 

@@ -32,10 +32,11 @@ CourseHub provides a single iOS app where students can:
 | Layer | Technology |
 |-------|-----------|
 | **Client** | iOS (Swift, SwiftUI) |
-| **Server** | Google App Engine (Standard Environment), Python 3.12, Flask with Blueprints |
-| **Database** | Firestore in Datastore Mode (`google-cloud-datastore` package) |
+| **Server** | Python 3.12, Flask with Blueprints |
+| **Database** | Firestore (Native Mode) via `firebase-admin` SDK |
 | **Authentication** | Firebase Authentication (Email/Password) |
-| **Deployment** | Google App Engine (Standard), gunicorn |
+| **Real-Time Chat** | Firestore snapshot listeners (iOS reads directly from Firestore) |
+| **Deployment** | gunicorn |
 
 ## Milestone 0 Scope
 
@@ -46,10 +47,14 @@ Milestone 0 delivers two core features:
 
 ### Simplifications for M0
 
-- **No WebSockets.** Chat uses HTTP polling every 5 seconds.
 - **No separate GroupChat entity.** Chat membership is derived from class enrollment.
-- **Hardcoded seed data.** Classes are loaded from a Python list, not a real course catalog API.
 - **Client-side search.** The client fetches all classes once and filters locally (dataset is small).
+
+### Post-M0 Enhancements
+
+- **Real-time chat.** Chat now uses Firestore snapshot listeners instead of HTTP polling.
+- **Persistent messages.** Messages are stored in Firestore and persist across server restarts.
+- **Real course data.** Courses are loaded from a CSV import script into Firestore.
 
 ## Repository Structure
 
@@ -62,21 +67,22 @@ ECS-191/
 ├── api.md
 ├── add_class.md
 ├── class_groupchat.md
+├── authentication.md
+├── realtime_chat.md
 ├── server/
 │   ├── main.py              # Flask app factory, registers blueprints
-│   ├── models.py            # Entity kind constants + helper functions
-│   ├── seed_data.py         # Hardcoded class list + seed function
-│   ├── app.yaml             # GAE config (Python 3.12 runtime)
 │   ├── requirements.txt
-│   ├── test_api.py          # API integration tests
-│   ├── conftest.py          # Pytest fixtures
 │   ├── api/
-│   │   ├── __init__.py
-│   │   ├── classes.py       # Class listing + enrollment endpoints
+│   │   ├── classes.py       # Class listing endpoints
+│   │   ├── users.py         # User registration & enrollment endpoints
 │   │   └── chat.py          # Messaging endpoints
-│   └── services/
-│       ├── __init__.py
-│       └── datastore_service.py  # All Datastore CRUD operations
+│   ├── services/
+│   │   ├── datastore_service.py  # All Firestore CRUD operations
+│   │   └── auth_service.py       # Firebase token verification
+│   └── tests/
+│       ├── conftest.py      # Pytest fixtures with mocked Firestore
+│       ├── test_auth.py
+│       └── test_chat.py
 └── ios/
     └── CourseHub/
         ├── Models/
@@ -90,20 +96,20 @@ ECS-191/
 | Decision | Choice | Rationale |
 |----------|--------|-----------|
 | Auth | Firebase Authentication | Email/password auth with secure token verification; easy to add social login later |
-| DB package | `google-cloud-datastore` | Entities are plain dicts (not ORM objects); easy to swap DB later |
-| Chat membership | Derived from `UserClass` enrollment | No separate GroupChat entity needed; enrollment = membership |
-| Chat transport | HTTP polling (5s interval) | Simple implementation for M0; no WebSocket complexity |
-| Search | Client-side filtering | Only ~13 classes; fetch all once, filter locally |
+| DB package | `firebase-admin` (Firestore) | Service functions return plain dicts; easy to swap DB later |
+| Chat membership | Derived from enrollment records | No separate GroupChat entity needed; enrollment = membership |
+| Chat transport | Firestore snapshot listeners | Real-time updates without polling; server-mediated writes for access control |
+| Search | Client-side filtering | Fetch all classes once, filter locally |
 | Service layer | Returns plain dicts | Decouples business logic from DB implementation; enables easy DB swap |
 
-## Data Models (High Level)
+## Firestore Data Model
 
-| Entity | Key Fields | Purpose |
-|--------|-----------|---------|
-| **Class** | class_code, class_name, quarter | Course catalog (seed data) |
-| **User** | id, name, email/phone | Student profile |
-| **UserClass** | user_id, class_id | Enrollment join (also defines chat membership) |
-| **Message** | chat_id, user_id, content, timestamp | Chat messages (chat_id = class_id) |
+| Collection | Key Fields | Purpose |
+|-----------|-----------|---------|
+| `courses/{doc_id}` | code, name, lecture_times, discussion_times | Course catalog |
+| `users/{uid}` | uid, email, display_name | Student profile (doc ID = Firebase UID) |
+| `users/{uid}/enrollments/{doc_id}` | class_id, enrolled_at | Enrollment (also defines chat membership) |
+| `classes/{class_id}/messages/{doc_id}` | sender_id, sender_name, content, timestamp | Chat messages |
 
 ## Related Documentation
 
