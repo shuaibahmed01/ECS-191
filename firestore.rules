@@ -1,0 +1,9 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Chat messages: authenticated users can read, server writes via Admin SDK
+    match /classes/{classId}/messages/{messageId} {
+      allow read: if request.auth != null;
+    }
+  }
+}

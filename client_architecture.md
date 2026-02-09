@@ -2,100 +2,82 @@
 
 ## Overview
 
-The CourseHub iOS client is built with **Swift** and **SwiftUI**, following the **MVVM (Model-View-ViewModel)** pattern. It uses the modern `@Observable` macro (not the older `ObservableObject` protocol) and `async/await` for all networking. The app communicates with the Flask backend via a singleton `APIClient` that wraps `URLSession`.
+The CourseHub iOS client is built with **Swift** and **SwiftUI**, following the **MVVM (Model-View-ViewModel)** pattern. It uses the modern `@Observable` macro and `async/await` for networking. Authentication uses **Firebase Authentication** (email/password). Chat messages are received in real time via **Firestore snapshot listeners**, while all other data flows through a REST API backed by Flask.
 
 ## Project Structure
 
 ```
 ios/CourseHub/
-├── CourseHubApp.swift           # App entry point
+├── CourseHubApp.swift              # App entry point, Firebase init
 ├── Models/
-│   ├── CourseClass.swift        # Class catalog model
-│   ├── UserScheduleEntry.swift  # Enrollment model
-│   ├── ChatMessage.swift        # Chat message model
-│   └── User.swift               # User model
+│   ├── CourseClass.swift           # Course catalog model
+│   ├── UserScheduleEntry.swift     # Enrollment model (extends CourseClass)
+│   └── ChatMessage.swift           # Chat message model (Firestore + Codable)
 ├── ViewModels/
-│   ├── ClassListViewModel.swift     # Browse/search classes
-│   ├── MyScheduleViewModel.swift    # User's enrolled classes
-│   └── ChatViewModel.swift          # Chat messages + polling
+│   ├── AuthViewModel.swift         # Firebase Auth state management
+│   ├── ClassListViewModel.swift    # Browse/search classes
+│   ├── MyScheduleViewModel.swift   # User's enrolled classes
+│   └── ChatViewModel.swift         # Real-time chat via Firestore listener
 ├── Views/
-│   ├── ClassListView.swift          # Browse classes tab
-│   ├── MyScheduleView.swift         # My schedule tab
-│   ├── ChatView.swift               # Group chat screen
-│   └── MemberListView.swift         # Chat member list
+│   ├── LoginView.swift             # Sign in / sign up form
+│   ├── MainTabView.swift           # Tab navigation (Schedule + Profile)
+│   ├── ClassListView.swift         # Browse classes (shown as sheet)
+│   ├── MyScheduleView.swift        # Enrolled classes list
+│   ├── ClassDetailView.swift       # Class info + link to chat
+│   └── ChatView.swift              # Group chat screen
 └── Networking/
-    └── APIClient.swift              # Singleton HTTP client
+    └── APIClient.swift             # Singleton HTTP client with Firebase auth
 ```
 
 ## Data Models
-
-All models are Swift `Codable` structs for easy JSON serialization/deserialization.
 
 ### `CourseClass`
 
 ```swift
 struct CourseClass: Codable, Identifiable {
-    let id: Int
+    let id: String              // Firestore doc ID (e.g., "ecs_191")
     let classCode: String
     let className: String
-    let quarter: String
-
-    enum CodingKeys: String, CodingKey {
-        case id
-        case classCode = "class_code"
-        case className = "class_name"
-        case quarter
-    }
+    let lectureTimes: [String]
+    let discussionTimes: [String]
 }
 ```
 
 ### `UserScheduleEntry`
 
+Extends `CourseClass` with an enrollment ID for unenroll operations.
+
 ```swift
 struct UserScheduleEntry: Codable, Identifiable {
-    let id: Int           // class id
+    let id: String
     let classCode: String
     let className: String
-    let quarter: String
-    let enrollmentId: Int
-
-    enum CodingKeys: String, CodingKey {
-        case id
-        case classCode = "class_code"
-        case className = "class_name"
-        case quarter
-        case enrollmentId = "enrollment_id"
-    }
+    let lectureTimes: [String]
+    let discussionTimes: [String]
+    let enrollmentId: String
 }
 ```
 
 ### `ChatMessage`
 
+Supports initialization from both Firestore document snapshots (for real-time reads) and server JSON responses (for POST confirmations).
+
 ```swift
-struct ChatMessage: Codable, Identifiable {
-    let id: Int
-    let chatId: Int
-    let userId: Int
+struct ChatMessage: Identifiable {
+    let id: String              // Firestore document ID
+    let classId: String
+    let senderId: String        // Firebase UID
+    let senderName: String
     let content: String
-    let timestamp: String
+    let timestamp: Date
 
-    enum CodingKeys: String, CodingKey {
-        case id
-        case chatId = "chat_id"
-        case userId = "user_id"
-        case content
-        case timestamp
-    }
+    init?(document: DocumentSnapshot, classId: String)  // From Firestore listener
+    init(id:classId:senderId:senderName:content:timestamp:)  // Manual init
 }
-```
 
-### `User`
-
-```swift
-struct User: Codable, Identifiable {
-    let id: Int
-    let name: String
-    let email: String
+struct ChatMessageResponse: Codable {
+    // Decodes the server POST response (id, class_id, sender_id, sender_name, content)
+    func toChatMessage() -> ChatMessage
 }
 ```
 
@@ -103,460 +85,120 @@ struct User: Codable, Identifiable {
 
 ### `APIClient`
 
-A singleton that wraps `URLSession` with `async/await`. Handles JSON encoding/decoding, sets the `X-User-Id` header on every request, and provides typed methods for each API endpoint.
+A singleton that wraps `URLSession` with `async/await`. Uses Firebase ID tokens for authentication.
 
-```swift
-@Observable
-class APIClient {
-    static let shared = APIClient()
+- **Base URL:** `http://localhost:5001/v1`
+- **Auth:** Extracts Firebase ID token via `user.getIDToken()` and adds `Authorization: Bearer <token>` header
+- **JSON:** Uses `JSONDecoder` with `.iso8601` date strategy
 
-    private let baseURL = "https://<project-id>.appspot.com/v1"
-    private let session = URLSession.shared
-    var userId: Int = 1  // Hardcoded for M0
+**Key methods:**
 
-    private init() {}
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `fetchClasses()` | `GET /v1/classes` | Browse all courses (no auth) |
+| `enrollInClass(classId:)` | `POST /v1/users/me/classes` | Enroll in a class |
+| `fetchMyClasses()` | `GET /v1/users/me/classes` | Get enrolled classes |
+| `unenroll(enrollmentId:)` | `DELETE /v1/users/me/classes/:id` | Unenroll from a class |
+| `sendMessage(classId:content:)` | `POST /v1/classes/:id/messages` | Send a chat message |
+| `registerUser(uid:email:displayName:)` | `POST /v1/users` | Register user after Firebase signup |
 
-    // MARK: - Generic request helper
-
-    private func request<T: Decodable>(
-        _ method: String,
-        path: String,
-        body: [String: Any]? = nil,
-        queryItems: [URLQueryItem]? = nil
-    ) async throws -> T {
-        var components = URLComponents(string: baseURL + path)!
-        components.queryItems = queryItems
-
-        var request = URLRequest(url: components.url!)
-        request.httpMethod = method
-        request.setValue("\(userId)", forHTTPHeaderField: "X-User-Id")
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-
-        if let body = body {
-            request.httpBody = try JSONSerialization.data(withJSONObject: body)
-        }
-
-        let (data, response) = try await session.data(for: request)
-
-        guard let httpResponse = response as? HTTPURLResponse,
-              (200...299).contains(httpResponse.statusCode) else {
-            let httpResponse = response as? HTTPURLResponse
-            throw APIError.httpError(statusCode: httpResponse?.statusCode ?? 0)
-        }
-
-        return try JSONDecoder().decode(T.self, from: data)
-    }
-
-    // MARK: - Class endpoints
-
-    func fetchClasses() async throws -> [CourseClass] {
-        let response: ClassListResponse = try await request("GET", path: "/classes")
-        return response.classes
-    }
-
-    func fetchClass(id: Int) async throws -> CourseClass {
-        return try await request("GET", path: "/classes/\(id)")
-    }
-
-    // MARK: - Enrollment endpoints
-
-    func enrollInClass(classId: Int) async throws -> UserScheduleEntry {
-        return try await request(
-            "POST",
-            path: "/users/\(userId)/classes",
-            body: ["class_id": classId]
-        )
-    }
-
-    func fetchMyClasses() async throws -> [UserScheduleEntry] {
-        let response: UserClassListResponse = try await request(
-            "GET",
-            path: "/users/\(userId)/classes"
-        )
-        return response.classes
-    }
-
-    func unenroll(enrollmentId: Int) async throws {
-        let _: EmptyResponse = try await request(
-            "DELETE",
-            path: "/users/\(userId)/classes/\(enrollmentId)"
-        )
-    }
-
-    // MARK: - Chat endpoints
-
-    func fetchMessages(classId: Int, limit: Int = 50, before: String? = nil) async throws -> [ChatMessage] {
-        var queryItems = [URLQueryItem(name: "limit", value: "\(limit)")]
-        if let before = before {
-            queryItems.append(URLQueryItem(name: "before", value: before))
-        }
-        let response: MessageListResponse = try await request(
-            "GET",
-            path: "/classes/\(classId)/chat/messages",
-            queryItems: queryItems
-        )
-        return response.messages
-    }
-
-    func sendMessage(classId: Int, content: String) async throws -> ChatMessage {
-        return try await request(
-            "POST",
-            path: "/classes/\(classId)/chat/messages",
-            body: ["content": content]
-        )
-    }
-
-    func fetchMembers(classId: Int) async throws -> [User] {
-        let response: MemberListResponse = try await request(
-            "GET",
-            path: "/classes/\(classId)/chat/members"
-        )
-        return response.members
-    }
-}
-
-// MARK: - Response wrappers
-
-struct ClassListResponse: Decodable {
-    let classes: [CourseClass]
-}
-
-struct UserClassListResponse: Decodable {
-    let classes: [UserScheduleEntry]
-}
-
-struct MessageListResponse: Decodable {
-    let messages: [ChatMessage]
-}
-
-struct MemberListResponse: Decodable {
-    let members: [User]
-}
-
-struct EmptyResponse: Decodable {}
-
-// MARK: - Error types
-
-enum APIError: Error {
-    case httpError(statusCode: Int)
-}
-```
+Note: `fetchMessages` was removed -- the iOS client now reads messages directly from Firestore via snapshot listeners.
 
 ## ViewModels
 
-All ViewModels use the `@Observable` macro for SwiftUI reactivity.
+### `AuthViewModel`
+
+Manages Firebase Authentication state.
+
+- Listens for auth state changes via `addStateDidChangeListener`
+- Properties: `isAuthenticated`, `isLoading`, `currentUser`
+- Methods: `signUp()`, `signIn()`, `signOut()`, `resetPassword()`
+- Calls `APIClient.registerUser()` after successful signup to sync with backend
 
 ### `ClassListViewModel`
 
 Manages the class catalog and client-side search filtering.
 
-```swift
-@Observable
-class ClassListViewModel {
-    var allClasses: [CourseClass] = []
-    var searchText: String = ""
-    var isLoading = false
-    var errorMessage: String?
-
-    var filteredClasses: [CourseClass] {
-        if searchText.isEmpty {
-            return allClasses
-        }
-        let query = searchText.lowercased()
-        return allClasses.filter {
-            $0.classCode.lowercased().contains(query) ||
-            $0.className.lowercased().contains(query)
-        }
-    }
-
-    func loadClasses() async {
-        isLoading = true
-        errorMessage = nil
-        do {
-            allClasses = try await APIClient.shared.fetchClasses()
-        } catch {
-            errorMessage = "Failed to load classes: \(error.localizedDescription)"
-        }
-        isLoading = false
-    }
-
-    func addClass(_ classId: Int) async -> Bool {
-        do {
-            _ = try await APIClient.shared.enrollInClass(classId: classId)
-            return true
-        } catch {
-            errorMessage = "Failed to add class: \(error.localizedDescription)"
-            return false
-        }
-    }
-}
-```
+- Fetches all classes once, filters locally via computed `filteredClasses`
+- Client-side search is sufficient since the catalog is small
 
 ### `MyScheduleViewModel`
 
 Manages the user's enrolled classes.
 
-```swift
-@Observable
-class MyScheduleViewModel {
-    var enrolledClasses: [UserScheduleEntry] = []
-    var isLoading = false
-    var errorMessage: String?
-
-    func loadSchedule() async {
-        isLoading = true
-        errorMessage = nil
-        do {
-            enrolledClasses = try await APIClient.shared.fetchMyClasses()
-        } catch {
-            errorMessage = "Failed to load schedule: \(error.localizedDescription)"
-        }
-        isLoading = false
-    }
-
-    func removeClass(enrollmentId: Int) async -> Bool {
-        do {
-            try await APIClient.shared.unenroll(enrollmentId: enrollmentId)
-            enrolledClasses.removeAll { $0.enrollmentId == enrollmentId }
-            return true
-        } catch {
-            errorMessage = "Failed to remove class: \(error.localizedDescription)"
-            return false
-        }
-    }
-}
-```
+- `loadSchedule()` fetches from `GET /v1/users/me/classes`
+- `removeClass(enrollmentId:)` calls `DELETE` and removes from local list
 
 ### `ChatViewModel`
 
-Manages chat messages for a specific class. Implements **polling** (every 5 seconds) to fetch new messages.
+Manages real-time chat for a specific class using **Firestore snapshot listeners**.
 
 ```swift
 @Observable
 class ChatViewModel {
-    let classId: Int
     var messages: [ChatMessage] = []
-    var members: [User] = []
-    var newMessageText: String = ""
-    var isLoading = false
+    var messageText: String = ""
+    var isLoading: Bool = false
+    var isSending: Bool = false
     var errorMessage: String?
+    private var listener: ListenerRegistration?
 
-    private var isPolling = false
-
-    init(classId: Int) {
-        self.classId = classId
+    func startListening() {
+        // Attaches a Firestore snapshot listener on
+        // classes/{classId}/messages ordered by timestamp.
+        // Updates `messages` array whenever data changes.
     }
 
-    func loadInitialData() async {
-        isLoading = true
-        do {
-            async let messagesResult = APIClient.shared.fetchMessages(classId: classId)
-            async let membersResult = APIClient.shared.fetchMembers(classId: classId)
-            messages = try await messagesResult
-            members = try await membersResult
-        } catch {
-            errorMessage = "Failed to load chat: \(error.localizedDescription)"
-        }
-        isLoading = false
-    }
-
-    func startPolling() async {
-        isPolling = true
-        while isPolling {
-            try? await Task.sleep(nanoseconds: 5_000_000_000) // 5 seconds
-            guard isPolling else { break }
-            do {
-                messages = try await APIClient.shared.fetchMessages(classId: classId)
-            } catch {
-                // Silently continue polling on error
-            }
-        }
-    }
-
-    func stopPolling() {
-        isPolling = false
+    func stopListening() {
+        // Removes the snapshot listener.
     }
 
     func sendMessage() async {
-        let content = newMessageText.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !content.isEmpty else { return }
-
-        // Optimistic UI: add message locally before server confirms
-        let optimisticMessage = ChatMessage(
-            id: -1,
-            chatId: classId,
-            userId: APIClient.shared.userId,
-            content: content,
-            timestamp: ISO8601DateFormatter().string(from: Date())
-        )
-        messages.insert(optimisticMessage, at: 0)
-        newMessageText = ""
-
-        do {
-            let serverMessage = try await APIClient.shared.sendMessage(
-                classId: classId,
-                content: content
-            )
-            // Replace optimistic message with server version
-            if let index = messages.firstIndex(where: { $0.id == -1 }) {
-                messages[index] = serverMessage
-            }
-        } catch {
-            // Remove optimistic message on failure
-            messages.removeAll { $0.id == -1 }
-            errorMessage = "Failed to send message"
-        }
+        // Sends message via APIClient.sendMessage() (server-mediated write).
+        // The snapshot listener will pick up the new message automatically.
     }
 }
 ```
+
+**Key design:** The client does NOT poll or manually refresh. The Firestore snapshot listener provides real-time updates. When a message is sent via the server, the server writes to Firestore, and the listener fires with the updated data.
 
 ## Views
 
 ### Navigation Structure
 
 ```
-TabView
-├── Tab 1: "Browse Classes"
-│   └── ClassListView
-│       └── (tap class) → adds to schedule
-├── Tab 2: "My Schedule"
-│   └── MyScheduleView
-│       └── (tap class) → ChatView
-│           └── (tap members) → MemberListView
-```
-
-### `ClassListView`
-
-```swift
-struct ClassListView: View {
-    @State private var viewModel = ClassListViewModel()
-
-    var body: some View {
-        NavigationStack {
-            List(viewModel.filteredClasses) { course in
-                HStack {
-                    VStack(alignment: .leading) {
-                        Text(course.classCode)
-                            .font(.headline)
-                        Text(course.className)
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                    }
-                    Spacer()
-                    Button("Add") {
-                        Task { await viewModel.addClass(course.id) }
-                    }
-                    .buttonStyle(.borderedProminent)
-                }
-            }
-            .searchable(text: $viewModel.searchText, prompt: "Search classes...")
-            .navigationTitle("Browse Classes")
-            .task { await viewModel.loadClasses() }
-        }
-    }
-}
-```
-
-### `MyScheduleView`
-
-```swift
-struct MyScheduleView: View {
-    @State private var viewModel = MyScheduleViewModel()
-
-    var body: some View {
-        NavigationStack {
-            List(viewModel.enrolledClasses) { entry in
-                NavigationLink(destination: ChatView(classId: entry.id, className: entry.classCode)) {
-                    VStack(alignment: .leading) {
-                        Text(entry.classCode)
-                            .font(.headline)
-                        Text(entry.className)
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                    }
-                }
-                .swipeActions {
-                    Button("Remove", role: .destructive) {
-                        Task { await viewModel.removeClass(enrollmentId: entry.enrollmentId) }
-                    }
-                }
-            }
-            .navigationTitle("My Schedule")
-            .task { await viewModel.loadSchedule() }
-        }
-    }
-}
+CourseHubApp
+├── (not authenticated) → LoginView
+└── (authenticated) → MainTabView
+    ├── Tab 1: "My Schedule"
+    │   └── MyScheduleView
+    │       └── (tap class) → ClassDetailView
+    │           └── (tap chat) → ChatView
+    │       └── (tap +) → ClassListView (sheet)
+    └── Tab 2: "Profile"
+        └── ProfileView (sign out)
 ```
 
 ### `ChatView`
 
-```swift
-struct ChatView: View {
-    let classId: Int
-    let className: String
-    @State private var viewModel: ChatViewModel
-
-    init(classId: Int, className: String) {
-        self.classId = classId
-        self.className = className
-        self._viewModel = State(initialValue: ChatViewModel(classId: classId))
-    }
-
-    var body: some View {
-        VStack {
-            // Messages list (newest at bottom)
-            ScrollView {
-                LazyVStack(alignment: .leading, spacing: 8) {
-                    ForEach(viewModel.messages.reversed()) { message in
-                        MessageBubble(message: message,
-                                      isCurrentUser: message.userId == APIClient.shared.userId)
-                    }
-                }
-                .padding()
-            }
-
-            // Message input bar
-            HStack {
-                TextField("Message...", text: $viewModel.newMessageText)
-                    .textFieldStyle(.roundedBorder)
-                Button("Send") {
-                    Task { await viewModel.sendMessage() }
-                }
-                .disabled(viewModel.newMessageText.trimmingCharacters(in: .whitespaces).isEmpty)
-            }
-            .padding()
-        }
-        .navigationTitle(className)
-        .task {
-            await viewModel.loadInitialData()
-        }
-        .task {
-            await viewModel.startPolling()
-        }
-        .onDisappear {
-            viewModel.stopPolling()
-        }
-    }
-}
-```
+- Uses `ScrollViewReader` for auto-scrolling to latest message
+- `MessageBubble` subview with different styling for current user vs. others
+- Message input with send button (disabled when empty or sending)
+- `onAppear` starts the Firestore listener, `onDisappear` stops it
+- No manual refresh button needed -- updates are real-time
 
 ### App Entry Point
 
 ```swift
 @main
 struct CourseHubApp: App {
+    init() {
+        FirebaseApp.configure()
+    }
+
     var body: some Scene {
         WindowGroup {
-            TabView {
-                ClassListView()
-                    .tabItem {
-                        Label("Browse", systemImage: "magnifyingglass")
-                    }
-                MyScheduleView()
-                    .tabItem {
-                        Label("My Schedule", systemImage: "calendar")
-                    }
-            }
+            // Shows LoginView or MainTabView based on AuthViewModel.isAuthenticated
         }
     }
 }
@@ -564,35 +206,32 @@ struct CourseHubApp: App {
 
 ## Key Patterns
 
-### Using `.task` for Async Work
+### Real-Time Chat via Firestore Listener
 
-SwiftUI's `.task` modifier is the preferred way to trigger async work when a view appears. It automatically cancels the task when the view disappears.
+The `ChatViewModel` attaches a `addSnapshotListener` on `classes/{classId}/messages` ordered by `timestamp`. This replaces the previous HTTP polling approach. The listener:
+- Fires immediately with all existing messages
+- Fires again whenever any message is added, modified, or removed
+- Is removed in `deinit` and `onDisappear` to avoid leaks
 
-```swift
-.task {
-    await viewModel.loadClasses()
-}
-```
+### Server-Mediated Writes
 
-### Client-Side Search
+Messages are sent via `POST /v1/classes/:id/messages` to the Flask server, which:
+1. Verifies the Firebase token
+2. Checks enrollment
+3. Writes to Firestore with `SERVER_TIMESTAMP`
 
-Since the class catalog is small (~13 classes), searching is done entirely on the client. The `ClassListViewModel` fetches all classes once and filters them using a computed property based on `searchText`.
+This ensures only enrolled users can send messages. The Firestore snapshot listener on all connected clients then picks up the new message.
 
-### Optimistic UI for Chat
+### Firebase Authentication
 
-When a user sends a message, it appears immediately in the chat (with a temporary `id = -1`) before the server responds. If the server call succeeds, the temporary message is replaced with the server version. If it fails, the temporary message is removed.
-
-### Polling for Chat Updates
-
-The `ChatViewModel` polls for new messages every 5 seconds using a `Task.sleep` loop. Polling starts when `ChatView` appears (via `.task`) and stops when the view disappears (via `.onDisappear`).
+The `APIClient` extracts a Firebase ID token via `Auth.auth().currentUser?.getIDToken()` and adds it as a Bearer token to every authenticated request. Tokens are refreshed automatically by the Firebase SDK.
 
 ## Error Handling
 
-All ViewModels follow a consistent error handling pattern:
-
+All ViewModels follow a consistent pattern:
 1. Set `isLoading = true` before the async call
 2. Wrap the call in `do/catch`
 3. On failure, set `errorMessage` with a user-friendly string
-4. Set `isLoading = false` after the call (success or failure)
+4. Set `isLoading = false` after the call
 
-Views can display `errorMessage` in an alert or inline text, and show a loading indicator based on `isLoading`.
+Views display `errorMessage` in alerts and show loading indicators based on `isLoading`.

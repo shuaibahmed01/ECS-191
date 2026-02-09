@@ -69,16 +69,18 @@ List all classes in the catalog. Optionally filter by search query. **No authent
 {
   "classes": [
     {
-      "id": 1,
+      "id": "ecs_191",
       "class_code": "ECS 191",
       "class_name": "Design Project",
-      "quarter": "W26"
+      "lecture_times": ["11:00 - 12:20 PM, TR"],
+      "discussion_times": ["2:10 - 3:00 PM, T"]
     },
     {
-      "id": 2,
+      "id": "ecs_170",
       "class_code": "ECS 170",
       "class_name": "Introduction to Artificial Intelligence",
-      "quarter": "W26"
+      "lecture_times": ["12:10 - 1:00 PM, MWF"],
+      "discussion_times": ["5:10 - 6:00 PM, R"]
     }
   ]
 }
@@ -94,16 +96,15 @@ Get details for a single class. **No authentication required.**
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `class_id` | int | The ID of the class |
+| `class_id` | string | The Firestore document ID of the class (e.g., `ecs_191`) |
 
 **Response: `200 OK`**
 
 ```json
 {
-  "id": 1,
+  "id": "ecs_191",
   "class_code": "ECS 191",
-  "class_name": "Design Project",
-  "quarter": "W26"
+  "class_name": "Design Project"
 }
 ```
 
@@ -167,7 +168,7 @@ Enroll the authenticated user in a class. This also grants access to the class g
 
 ```json
 {
-  "class_id": 1
+  "class_id": "ecs_191"
 }
 ```
 
@@ -175,11 +176,10 @@ Enroll the authenticated user in a class. This also grants access to the class g
 
 ```json
 {
-  "id": 1,
+  "id": "ecs_191",
   "class_code": "ECS 191",
   "class_name": "Design Project",
-  "quarter": "W26",
-  "enrollment_id": 1
+  "enrollment_id": "enroll_abc123"
 }
 ```
 
@@ -213,11 +213,10 @@ Get all classes the authenticated user is enrolled in.
 {
   "classes": [
     {
-      "id": 1,
+      "id": "ecs_191",
       "class_code": "ECS 191",
       "class_name": "Design Project",
-      "quarter": "W26",
-      "enrollment_id": 1
+      "enrollment_id": "enroll_abc123"
     }
   ]
 }
@@ -235,7 +234,7 @@ Unenroll the authenticated user from a class. This also removes access to the cl
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `enrollment_id` | int | The ID of the enrollment record |
+| `enrollment_id` | string | The Firestore document ID of the enrollment record |
 
 **Response: `204 No Content`**
 
@@ -257,7 +256,7 @@ All chat endpoints require the user to be authenticated AND enrolled in the clas
 
 #### `GET /v1/classes/:class_id/messages`
 
-Get chat messages for a class group chat.
+Get chat messages for a class group chat. Messages are stored in Firestore under `classes/{class_id}/messages` and returned sorted by timestamp.
 
 **Headers:** `Authorization: Bearer <token>`
 
@@ -265,7 +264,7 @@ Get chat messages for a class group chat.
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `class_id` | int | The ID of the class |
+| `class_id` | string | The Firestore document ID of the class (e.g., `ecs_032a`) |
 
 **Response: `200 OK`**
 
@@ -273,16 +272,16 @@ Get chat messages for a class group chat.
 {
   "messages": [
     {
-      "id": 1,
-      "class_id": 1,
+      "id": "msg_abc123",
+      "class_id": "ecs_032a",
       "sender_id": "firebase_uid_123",
       "sender_name": "Alice Chen",
       "content": "Hey everyone! Anyone want to form a study group?",
       "timestamp": "2026-01-15T10:30:00Z"
     },
     {
-      "id": 2,
-      "class_id": 1,
+      "id": "msg_def456",
+      "class_id": "ecs_032a",
       "sender_id": "firebase_uid_456",
       "sender_name": "Bob Martinez",
       "content": "I'm in! When were you thinking?",
@@ -304,7 +303,7 @@ Get chat messages for a class group chat.
 
 #### `POST /v1/classes/:class_id/messages`
 
-Send a message to the class group chat.
+Send a message to the class group chat. The message is written to Firestore under `classes/{class_id}/messages` with a server timestamp. The iOS client receives the new message in real time via its Firestore snapshot listener.
 
 **Headers:** `Authorization: Bearer <token>`
 
@@ -312,7 +311,7 @@ Send a message to the class group chat.
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `class_id` | int | The ID of the class |
+| `class_id` | string | The Firestore document ID of the class (e.g., `ecs_032a`) |
 
 **Request Body:**
 
@@ -326,12 +325,12 @@ Send a message to the class group chat.
 
 ```json
 {
-  "id": 5,
-  "class_id": 1,
+  "id": "msg_ghi789",
+  "class_id": "ecs_032a",
   "sender_id": "firebase_uid_123",
   "sender_name": "John Doe",
   "content": "Hey everyone!",
-  "timestamp": "2026-01-15T11:00:00Z"
+  "timestamp": ""
 }
 ```
 
@@ -348,24 +347,6 @@ Send a message to the class group chat.
 ```json
 {
   "error": "Not enrolled in this class"
-}
-```
-
----
-
-### Seed (Development Only)
-
-#### `POST /v1/seed`
-
-Populate the database with seed data (~13 UC Davis CS classes). **No authentication required.**
-
-**Request Body:** None
-
-**Response: `200 OK`**
-
-```json
-{
-  "message": "Seeded 13 classes"
 }
 ```
 
@@ -399,5 +380,4 @@ Check if the server is running. **No authentication required.**
 | `DELETE` | `/v1/users/me/classes/:id` | Unenroll from a class | Yes |
 | `GET` | `/v1/classes/:id/messages` | Get chat messages | Yes + Enrolled |
 | `POST` | `/v1/classes/:id/messages` | Send a chat message | Yes + Enrolled |
-| `POST` | `/v1/seed` | Seed database (dev only) | No |
 | `GET` | `/health` | Health check | No |

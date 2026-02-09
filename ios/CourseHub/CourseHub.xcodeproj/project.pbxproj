@@ -7,13 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		4E0A7DD62F3140CF0018AC36 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 4E0A7DD52F3140CF0018AC36 /* GoogleService-Info.plist */; };
 		4E0A7DD92F3142040018AC36 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 4E0A7DD82F3142040018AC36 /* FirebaseAuth */; };
 		4E0A7DDB2F3142040018AC36 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 4E0A7DDA2F3142040018AC36 /* FirebaseCore */; };
+		CF68ADF02F3A00000018AC36 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = CF68ADEF2F3A00000018AC36 /* FirebaseFirestore */; };
 		4E5EF3232F3148EF00FF68F4 /* AuthViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E5EF3222F3148EF00FF68F4 /* AuthViewModel.swift */; };
 		4E5EF3252F31494F00FF68F4 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E5EF3242F31494F00FF68F4 /* LoginView.swift */; };
 		4E5EF3272F31496100FF68F4 /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E5EF3262F31496100FF68F4 /* MainTabView.swift */; };
-		988DBFCB2F3998C200F7562A /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 988DBFCA2F3998C200F7562A /* GoogleService-Info.plist */; };
 		A1000001 /* CourseHubApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000001 /* CourseHubApp.swift */; };
 		A1000002 /* CourseClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000002 /* CourseClass.swift */; };
 		A1000003 /* UserScheduleEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000003 /* UserScheduleEntry.swift */; };
@@ -26,15 +25,13 @@
 		A1000010 /* ChatViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000011 /* ChatViewModel.swift */; };
 		A1000011 /* ChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000012 /* ChatView.swift */; };
 		A1000012 /* ClassDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000013 /* ClassDetailView.swift */; };
-		B13314C22F3163E900A1C80F /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = B13314C12F3163E800A1C80F /* GoogleService-Info.plist */; };
+		CF68ACF52F39CFEF003F0B04 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = CF68ACF42F39CFEF003F0B04 /* GoogleService-Info.plist */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		4E0A7DD52F3140CF0018AC36 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		4E5EF3222F3148EF00FF68F4 /* AuthViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthViewModel.swift; sourceTree = "<group>"; };
 		4E5EF3242F31494F00FF68F4 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
 		4E5EF3262F31496100FF68F4 /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
-		988DBFCA2F3998C200F7562A /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		A2000001 /* CourseHubApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CourseHubApp.swift; sourceTree = "<group>"; };
 		A2000002 /* CourseClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CourseClass.swift; sourceTree = "<group>"; };
 		A2000003 /* UserScheduleEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserScheduleEntry.swift; sourceTree = "<group>"; };
@@ -49,7 +46,7 @@
 		A2000012 /* ChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatView.swift; sourceTree = "<group>"; };
 		A2000013 /* ClassDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClassDetailView.swift; sourceTree = "<group>"; };
 		A3000001 /* CourseHub.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CourseHub.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		B13314C12F3163E800A1C80F /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
+		CF68ACF42F39CFEF003F0B04 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -59,6 +56,7 @@
 			files = (
 				4E0A7DDB2F3142040018AC36 /* FirebaseCore in Frameworks */,
 				4E0A7DD92F3142040018AC36 /* FirebaseAuth in Frameworks */,
+				CF68ADF02F3A00000018AC36 /* FirebaseFirestore in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -68,10 +66,7 @@
 		A5000001 = {
 			isa = PBXGroup;
 			children = (
-				988DBFCA2F3998C200F7562A /* GoogleService-Info.plist */,
-				B13314C12F3163E800A1C80F /* GoogleService-Info.plist */,
 				A5000002 /* CourseHub */,
-				4E0A7DD52F3140CF0018AC36 /* GoogleService-Info.plist */,
 				A5000010 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -79,6 +74,7 @@
 		A5000002 /* CourseHub */ = {
 			isa = PBXGroup;
 			children = (
+				CF68ACF42F39CFEF003F0B04 /* GoogleService-Info.plist */,
 				A2000001 /* CourseHubApp.swift */,
 				A2000009 /* Info.plist */,
 				A5000003 /* Models */,
@@ -200,9 +196,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4E0A7DD62F3140CF0018AC36 /* GoogleService-Info.plist in Resources */,
-				B13314C22F3163E900A1C80F /* GoogleService-Info.plist in Resources */,
-				988DBFCB2F3998C200F7562A /* GoogleService-Info.plist in Resources */,
+				CF68ACF52F39CFEF003F0B04 /* GoogleService-Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -455,6 +449,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 4E0A7DD72F3142040018AC36 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseCore;
+		};
+		CF68ADEF2F3A00000018AC36 /* FirebaseFirestore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4E0A7DD72F3142040018AC36 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseFirestore;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

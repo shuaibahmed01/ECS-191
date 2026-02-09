@@ -4,7 +4,6 @@ from flask import Flask, jsonify
 from api.classes import classes_bp
 from api.chat import chat_bp
 from api.users import users_bp
-from services.datastore_service import seed_messages_in_memory
 from services.auth_service import init_firebase
 
 
@@ -19,12 +18,6 @@ def create_app():
     app.register_blueprint(classes_bp, url_prefix="/v1")
     app.register_blueprint(chat_bp, url_prefix="/v1")
     app.register_blueprint(users_bp, url_prefix="/v1")
-
-    @app.route("/v1/seed", methods=["POST"])
-    def seed():
-        """Seed the database with initial message data."""
-        seed_messages_in_memory()
-        return jsonify({"message": "Seeded messages"})
 
     @app.route("/health", methods=["GET"])
     def health():

@@ -1,12 +1,6 @@
-"""Data service for CourseHub with Firestore for enrollments and courses."""
+"""Data service for CourseHub with Firestore for enrollments, courses, and messages."""
 
-from datetime import datetime, timezone
-from seed_data import SEED_MESSAGES
 from firebase_admin import firestore
-
-# In-memory storage (for messages)
-_messages = {}       # id -> message dict
-_next_message_id = 1
 
 # Firestore client (initialized lazily)
 _db = None
@@ -17,16 +11,6 @@ def _get_db():
     if _db is None:
         _db = firestore.client()
     return _db
-
-
-def seed_messages_in_memory():
-    """Load seed messages into memory."""
-    global _messages, _next_message_id
-    _messages = {m["id"]: m.copy() for m in SEED_MESSAGES}
-    if SEED_MESSAGES:
-        _next_message_id = max(m["id"] for m in SEED_MESSAGES) + 1
-    else:
-        _next_message_id = 1
 
 
 def get_all_classes(query=""):
@@ -154,11 +138,28 @@ def is_user_enrolled(user_id, class_id):
 
 def get_messages_for_class(class_id):
     """Return all messages for a class, sorted by timestamp."""
-    messages = [
-        m for m in _messages.values()
-        if m["class_id"] == class_id
-    ]
-    messages.sort(key=lambda m: m["timestamp"])
+    db = _get_db()
+    messages_ref = db.collection("classes").document(class_id).collection("messages")
+    query = messages_ref.order_by("timestamp")
+    docs = query.stream()
+
+    messages = []
+    for doc in docs:
+        data = doc.to_dict()
+        ts = data.get("timestamp")
+        if hasattr(ts, 'isoformat'):
+            timestamp_str = ts.strftime("%Y-%m-%dT%H:%M:%SZ")
+        else:
+            timestamp_str = str(ts) if ts else ""
+
+        messages.append({
+            "id": doc.id,
+            "class_id": class_id,
+            "sender_id": data.get("sender_id", ""),
+            "sender_name": data.get("sender_name", ""),
+            "content": data.get("content", ""),
+            "timestamp": timestamp_str,
+        })
     return messages
 
 
@@ -167,22 +168,27 @@ def create_message(class_id, sender_id, sender_name, content):
     Create a new message in a class chat.
     Returns the message dict.
     """
-    global _next_message_id
+    db = _get_db()
+    messages_ref = db.collection("classes").document(class_id).collection("messages")
 
-    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    message_data = {
+        "sender_id": sender_id,
+        "sender_name": sender_name,
+        "content": content,
+        "timestamp": firestore.SERVER_TIMESTAMP,
+    }
+    doc_ref = messages_ref.add(message_data)
+    # .add() returns a tuple of (timestamp, doc_ref)
+    new_doc_ref = doc_ref[1]
 
-    message = {
-        "id": _next_message_id,
+    return {
+        "id": new_doc_ref.id,
         "class_id": class_id,
         "sender_id": sender_id,
         "sender_name": sender_name,
         "content": content,
-        "timestamp": timestamp
+        "timestamp": "",  # server timestamp not yet resolved
     }
-    _messages[_next_message_id] = message
-    _next_message_id += 1
-
-    return message
 
 
 def create_user(uid, email, display_name):
