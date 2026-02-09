@@ -54,7 +54,13 @@ class AuthViewModel {
         errorMessage = nil
 
         do {
-            try await Auth.auth().signIn(withEmail: email, password: password)
+            let result = try await Auth.auth().signIn(withEmail: email, password: password)
+
+            // Sync user info with backend
+            await registerUserWithBackend(
+                user: result.user,
+                displayName: result.user.displayName ?? ""
+            )
         } catch {
             await MainActor.run {
                 self.errorMessage = error.localizedDescription

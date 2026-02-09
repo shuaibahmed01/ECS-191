@@ -2,7 +2,7 @@ import Foundation
 
 struct ChatMessage: Codable, Identifiable {
     let id: Int
-    let classId: Int
+    let classId: String
     let senderId: String
     let senderName: String
     let content: String

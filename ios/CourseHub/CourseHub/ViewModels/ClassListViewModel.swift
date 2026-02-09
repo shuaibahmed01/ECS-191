@@ -32,7 +32,7 @@ class ClassListViewModel {
     }
 
     @MainActor
-    func addClass(classId: Int) async {
+    func addClass(classId: String) async {
         errorMessage = nil
 
         do {

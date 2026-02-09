@@ -3,7 +3,7 @@ import SwiftUI
 struct ClassListView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var viewModel = ClassListViewModel()
-    var enrolledClassIds: Set<Int> = []
+    var enrolledClassIds: Set<String> = []
     var onClassAdded: (() -> Void)?
 
     var body: some View {

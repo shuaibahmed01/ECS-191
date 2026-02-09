@@ -60,3 +60,5 @@ playground.xcworkspace
 
 #google service info plist
 GoogleService-Info.plist
+
+CourseHub/GoogleService-Info.plist

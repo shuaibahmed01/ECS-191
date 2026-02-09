@@ -14,3 +14,5 @@ __pycache__/
 
 # Firebase credentials (DO NOT COMMIT - contains private keys)
 firebase-credentials.json
+
+scripts/courses.csv

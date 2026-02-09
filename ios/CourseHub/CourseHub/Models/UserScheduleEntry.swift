@@ -1,11 +1,13 @@
 import Foundation
 
 struct UserScheduleEntry: Codable, Identifiable {
-    let id: Int
+    let id: String
     let classCode: String
     let className: String
-    let quarter: String
+    let quarter: String?
     let enrollmentId: String
+    let lectureTimes: [String]?
+    let discussionTimes: [String]?
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -13,5 +15,7 @@ struct UserScheduleEntry: Codable, Identifiable {
         case className = "class_name"
         case quarter
         case enrollmentId = "enrollment_id"
+        case lectureTimes = "lecture_times"
+        case discussionTimes = "discussion_times"
     }
 }

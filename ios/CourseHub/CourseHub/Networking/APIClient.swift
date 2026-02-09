@@ -118,7 +118,7 @@ class APIClient {
         return response.classes
     }
 
-    func enrollInClass(classId: Int) async throws -> UserScheduleEntry {
+    func enrollInClass(classId: String) async throws -> UserScheduleEntry {
         let body = try JSONEncoder().encode(["class_id": classId])
         return try await request(
             endpoint: "/users/me/classes",
@@ -164,14 +164,14 @@ class APIClient {
         try? await URLSession.shared.data(for: request)
     }
 
-    func fetchMessages(classId: Int) async throws -> [ChatMessage] {
+    func fetchMessages(classId: String) async throws -> [ChatMessage] {
         let response: MessageListResponse = try await request(
             endpoint: "/classes/\(classId)/messages"
         )
         return response.messages
     }
 
-    func sendMessage(classId: Int, content: String) async throws -> ChatMessage {
+    func sendMessage(classId: String, content: String) async throws -> ChatMessage {
         let body = try JSONEncoder().encode([
             "content": content
         ])

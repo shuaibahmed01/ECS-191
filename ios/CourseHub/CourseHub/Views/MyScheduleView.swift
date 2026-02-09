@@ -1,8 +1,16 @@
 import SwiftUI
+import FirebaseAuth
 
 struct MyScheduleView: View {
     @State private var viewModel = MyScheduleViewModel()
     @State private var showingAddClass = false
+
+    private var greeting: String {
+        if let name = Auth.auth().currentUser?.displayName, !name.isEmpty {
+            return "Hi, \(name)"
+        }
+        return "My Schedule"
+    }
 
     var body: some View {
         NavigationStack {
@@ -67,7 +75,7 @@ struct MyScheduleView: View {
                     .padding(.bottom, 16)
                 }
             }
-            .navigationTitle("My Schedule")
+            .navigationTitle(greeting)
             .sheet(isPresented: $showingAddClass) {
                 ClassListView(
                     enrolledClassIds: Set(viewModel.enrolledClasses.map { $0.id }),
