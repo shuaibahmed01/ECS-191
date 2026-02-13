@@ -11,6 +11,8 @@ A mobile app for UC Davis students to manage their class schedules and communica
 - **My Schedule**: View all enrolled classes in one place
 - **Class Group Chat**: Chat with classmates in each enrolled class
 - **Remove Classes**: Swipe to remove classes from your schedule
+- **Syllabus Upload**: Upload a PDF or photo of your syllabus; AI extracts instructor, grading, dates, and policies
+- **Course Agent**: Chat with an AI assistant that answers questions using your syllabus as context
 
 ## Tech Stack
 
@@ -19,6 +21,7 @@ A mobile app for UC Davis students to manage their class schedules and communica
 - **Authentication**: Firebase Authentication
 - **Database**: Firestore (courses, users, enrollments, and chat messages)
 - **Real-Time Chat**: Firestore snapshot listeners (iOS reads directly from Firestore)
+- **AI**: Anthropic Claude API (syllabus extraction and course agent)
 
 ## Getting Started
 
@@ -50,20 +53,39 @@ A mobile app for UC Davis students to manage their class schedules and communica
 
 **Note:** Never commit credential files to git.
 
-### Step 2: Start the Server
+### Step 2: Configure Environment Variables
+
+Create a `.env` file in the `server/` directory:
+
+```bash
+cp server/.env.example server/.env
+```
+
+Then fill in the values:
+
+```
+ANTHROPIC_API_KEY=your-anthropic-api-key
+GOOGLE_CLOUD_PROJECT=coursehub-c99c6
+GOOGLE_APPLICATION_CREDENTIALS=firebase-credentials.json
+```
+
+- **ANTHROPIC_API_KEY**: Get one from [Anthropic Console](https://console.anthropic.com/) — required for syllabus extraction and course agent
+- **GOOGLE_CLOUD_PROJECT**: Your Firebase project ID
+- **GOOGLE_APPLICATION_CREDENTIALS**: Path to the Firebase service account key
+
+### Step 3: Start the Server
 
 ```bash
 cd server
 python -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
-export GOOGLE_APPLICATION_CREDENTIALS="firebase-credentials.json"
 python main.py
 ```
 
 The server runs on `http://localhost:5001`
 
-### Step 3: Run the iOS App
+### Step 4: Run the iOS App
 
 ```bash
 open ios/CourseHub/CourseHub.xcodeproj
@@ -94,6 +116,10 @@ All protected endpoints require header: `Authorization: Bearer <firebase_id_toke
 | DELETE | `/v1/users/me/classes/<enrollment_id>` | Unenroll from class |
 | GET | `/v1/classes/<id>/messages` | Get chat messages |
 | POST | `/v1/classes/<id>/messages` | Send chat message |
+| POST | `/v1/classes/<id>/syllabus` | Upload & process syllabus |
+| GET | `/v1/classes/<id>/syllabus` | Get extracted syllabus context |
+| POST | `/v1/classes/<id>/agent/chat` | Send message to course agent |
+| GET | `/v1/classes/<id>/agent/history` | Get agent chat history |
 
 ## Project Structure
 
@@ -102,11 +128,14 @@ All protected endpoints require header: `Authorization: Bearer <firebase_id_toke
 │   ├── api/
 │   │   ├── classes.py          # Class listing endpoints
 │   │   ├── users.py            # User & enrollment endpoints
-│   │   └── chat.py             # Chat endpoints
+│   │   ├── chat.py             # Chat endpoints
+│   │   └── syllabus.py         # Syllabus & course agent endpoints
 │   ├── services/
 │   │   ├── datastore_service.py  # Data layer
-│   │   └── auth_service.py       # Firebase token verification
+│   │   ├── auth_service.py       # Firebase token verification
+│   │   └── syllabus_service.py   # Anthropic API & syllabus Firestore CRUD
 │   ├── main.py
+│   ├── .env                     # Environment variables (not committed)
 │   ├── tests/                   # Pytest test suite
 │   └── requirements.txt
 │

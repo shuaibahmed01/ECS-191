@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ClassDetailView: View {
     let entry: UserScheduleEntry
+    @State private var showSyllabusSheet = false
 
     private var lectureSummary: String? {
         guard let times = entry.lectureTimes, !times.isEmpty else { return nil }
@@ -72,6 +73,36 @@ struct ClassDetailView: View {
                     }
                 }
             }
+
+            Section("Syllabus & AI") {
+                Button {
+                    showSyllabusSheet = true
+                } label: {
+                    HStack(spacing: 12) {
+                        Image(systemName: "doc.text.fill")
+                            .font(.title2)
+                            .foregroundStyle(.orange)
+                            .frame(width: 36)
+                        Text("Syllabus")
+                            .foregroundStyle(.primary)
+                    }
+                }
+
+                NavigationLink {
+                    CourseAgentView(classId: entry.id, classCode: entry.classCode)
+                } label: {
+                    HStack(spacing: 12) {
+                        Image(systemName: "sparkles")
+                            .font(.title2)
+                            .foregroundStyle(.purple)
+                            .frame(width: 36)
+                        Text("Course Agent")
+                    }
+                }
+            }
+        }
+        .sheet(isPresented: $showSyllabusSheet) {
+            SyllabusUploadView(classId: entry.id, classCode: entry.classCode)
         }
         .navigationTitle(entry.classCode)
         .navigationBarTitleDisplayMode(.inline)

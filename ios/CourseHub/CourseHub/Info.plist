@@ -17,5 +17,7 @@
 			</dict>
 		</dict>
 	</dict>
+	<key>NSCameraUsageDescription</key>
+	<string>CourseHub needs camera access to photograph your course syllabus.</string>
 </dict>
 </plist>

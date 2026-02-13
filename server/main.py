@@ -1,9 +1,13 @@
 """CourseHub Flask application."""
 
+from dotenv import load_dotenv
+load_dotenv()
+
 from flask import Flask, jsonify
 from api.classes import classes_bp
 from api.chat import chat_bp
 from api.users import users_bp
+from api.syllabus import syllabus_bp
 from services.auth_service import init_firebase
 
 
@@ -18,6 +22,7 @@ def create_app():
     app.register_blueprint(classes_bp, url_prefix="/v1")
     app.register_blueprint(chat_bp, url_prefix="/v1")
     app.register_blueprint(users_bp, url_prefix="/v1")
+    app.register_blueprint(syllabus_bp, url_prefix="/v1")
 
     @app.route("/health", methods=["GET"])
     def health():

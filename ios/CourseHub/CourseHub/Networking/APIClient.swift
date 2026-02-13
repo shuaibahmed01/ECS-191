@@ -168,6 +168,43 @@ class APIClient {
         )
     }
 
+    // MARK: - Syllabus & Course Agent
+
+    func uploadSyllabus(classId: String, fileDataBase64: String, fileType: String) async throws -> SyllabusUploadResponse {
+        let body = try JSONEncoder().encode([
+            "file_data": fileDataBase64,
+            "file_type": fileType,
+        ])
+        return try await request(
+            endpoint: "/classes/\(classId)/syllabus",
+            method: "POST",
+            body: body
+        )
+    }
+
+    func getSyllabusContext(classId: String) async throws -> SyllabusContextResponse {
+        return try await request(
+            endpoint: "/classes/\(classId)/syllabus"
+        )
+    }
+
+    func sendAgentMessage(classId: String, message: String) async throws -> AgentChatResponse {
+        let body = try JSONEncoder().encode([
+            "message": message,
+        ])
+        return try await request(
+            endpoint: "/classes/\(classId)/agent/chat",
+            method: "POST",
+            body: body
+        )
+    }
+
+    func getAgentHistory(classId: String) async throws -> AgentHistoryResponse {
+        return try await request(
+            endpoint: "/classes/\(classId)/agent/history"
+        )
+    }
+
     func registerUser(uid: String, email: String, displayName: String) async throws {
         let body = try JSONEncoder().encode([
             "uid": uid,
