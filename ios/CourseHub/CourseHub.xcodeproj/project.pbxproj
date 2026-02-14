@@ -9,10 +9,10 @@
 /* Begin PBXBuildFile section */
 		4E0A7DD92F3142040018AC36 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 4E0A7DD82F3142040018AC36 /* FirebaseAuth */; };
 		4E0A7DDB2F3142040018AC36 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 4E0A7DDA2F3142040018AC36 /* FirebaseCore */; };
-		CF68ADF02F3A00000018AC36 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = CF68ADEF2F3A00000018AC36 /* FirebaseFirestore */; };
 		4E5EF3232F3148EF00FF68F4 /* AuthViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E5EF3222F3148EF00FF68F4 /* AuthViewModel.swift */; };
 		4E5EF3252F31494F00FF68F4 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E5EF3242F31494F00FF68F4 /* LoginView.swift */; };
 		4E5EF3272F31496100FF68F4 /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E5EF3262F31496100FF68F4 /* MainTabView.swift */; };
+		4E6420E32F3EE1C80072AA7A /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 4E6420E22F3EE1C80072AA7A /* GoogleService-Info.plist */; };
 		A1000001 /* CourseHubApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000001 /* CourseHubApp.swift */; };
 		A1000002 /* CourseClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000002 /* CourseClass.swift */; };
 		A1000003 /* UserScheduleEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000003 /* UserScheduleEntry.swift */; };
@@ -25,7 +25,6 @@
 		A1000010 /* ChatViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000011 /* ChatViewModel.swift */; };
 		A1000011 /* ChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000012 /* ChatView.swift */; };
 		A1000012 /* ClassDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000013 /* ClassDetailView.swift */; };
-		CF68ACF52F39CFEF003F0B04 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = CF68ACF42F39CFEF003F0B04 /* GoogleService-Info.plist */; };
 		A1000020 /* SyllabusContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000020 /* SyllabusContext.swift */; };
 		A1000021 /* AgentMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000021 /* AgentMessage.swift */; };
 		A1000022 /* SyllabusUploadViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000022 /* SyllabusUploadViewModel.swift */; };
@@ -34,12 +33,14 @@
 		A1000025 /* CourseAgentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000025 /* CourseAgentView.swift */; };
 		A1000026 /* DocumentPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000026 /* DocumentPicker.swift */; };
 		A1000027 /* CameraPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000027 /* CameraPicker.swift */; };
+		CF68ADF02F3A00000018AC36 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = CF68ADEF2F3A00000018AC36 /* FirebaseFirestore */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		4E5EF3222F3148EF00FF68F4 /* AuthViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthViewModel.swift; sourceTree = "<group>"; };
 		4E5EF3242F31494F00FF68F4 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
 		4E5EF3262F31496100FF68F4 /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
+		4E6420E22F3EE1C80072AA7A /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		A2000001 /* CourseHubApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CourseHubApp.swift; sourceTree = "<group>"; };
 		A2000002 /* CourseClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CourseClass.swift; sourceTree = "<group>"; };
 		A2000003 /* UserScheduleEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserScheduleEntry.swift; sourceTree = "<group>"; };
@@ -53,8 +54,6 @@
 		A2000011 /* ChatViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatViewModel.swift; sourceTree = "<group>"; };
 		A2000012 /* ChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatView.swift; sourceTree = "<group>"; };
 		A2000013 /* ClassDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClassDetailView.swift; sourceTree = "<group>"; };
-		A3000001 /* CourseHub.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CourseHub.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		CF68ACF42F39CFEF003F0B04 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		A2000020 /* SyllabusContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyllabusContext.swift; sourceTree = "<group>"; };
 		A2000021 /* AgentMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentMessage.swift; sourceTree = "<group>"; };
 		A2000022 /* SyllabusUploadViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyllabusUploadViewModel.swift; sourceTree = "<group>"; };
@@ -63,6 +62,7 @@
 		A2000025 /* CourseAgentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CourseAgentView.swift; sourceTree = "<group>"; };
 		A2000026 /* DocumentPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentPicker.swift; sourceTree = "<group>"; };
 		A2000027 /* CameraPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraPicker.swift; sourceTree = "<group>"; };
+		A3000001 /* CourseHub.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CourseHub.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -90,7 +90,7 @@
 		A5000002 /* CourseHub */ = {
 			isa = PBXGroup;
 			children = (
-				CF68ACF42F39CFEF003F0B04 /* GoogleService-Info.plist */,
+				4E6420E22F3EE1C80072AA7A /* GoogleService-Info.plist */,
 				A2000001 /* CourseHubApp.swift */,
 				A2000009 /* Info.plist */,
 				A5000003 /* Models */,
@@ -220,7 +220,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				CF68ACF52F39CFEF003F0B04 /* GoogleService-Info.plist in Resources */,
+				4E6420E32F3EE1C80072AA7A /* GoogleService-Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

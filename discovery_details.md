@@ -13,3 +13,19 @@
 - No single app gives the full picture 
 - Has to mentally stitch together four platforms
 - Manually adds deadlines/important dates to Notion at the start of each quarter
+
+
+
+Commonly checks syllabus for late work policy and grading breakdown and deadlines
+
+Sometimes have to look at slides if syllabus is outdated or doesnt contain all info.
+
+For class groupchats usually uses discords and for smaller project groups sometimes uses  imessage or whatsapp
+
+To solve problem still skims syllabus or asks in class group chats
+Ask people in class if there is a discord or make group chat with friends
+
+Discord link can be expired or multiple groupchats made for same class
+If added class late cant see previous canvas email with student made discord link
+Syllabus are long so hard to find info and easy to miss stuff
+
