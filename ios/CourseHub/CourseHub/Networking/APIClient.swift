@@ -205,6 +205,53 @@ class APIClient {
         )
     }
 
+    // MARK: - Forum
+
+    func fetchPosts(courseId: String) async throws -> [ForumPost] {
+        let response: PostListResponse = try await request(
+            endpoint: "/courses/\(courseId)/posts"
+        )
+        return response.posts
+    }
+
+    func createPost(courseId: String, title: String, body: String) async throws -> ForumPost {
+        let body = try JSONEncoder().encode([
+            "title": title,
+            "body": body,
+        ])
+        return try await request(
+            endpoint: "/courses/\(courseId)/posts",
+            method: "POST",
+            body: body
+        )
+    }
+
+    func fetchPostDetail(courseId: String, postId: String) async throws -> PostDetailResponse {
+        return try await request(
+            endpoint: "/courses/\(courseId)/posts/\(postId)"
+        )
+    }
+
+    func toggleUpvote(courseId: String, postId: String) async throws -> UpvoteResponse {
+        return try await request(
+            endpoint: "/courses/\(courseId)/posts/\(postId)/upvote",
+            method: "POST"
+        )
+    }
+
+    func createComment(courseId: String, postId: String, body: String, parentCommentId: String? = nil) async throws -> ForumComment {
+        var payload: [String: String] = ["body": body]
+        if let parentId = parentCommentId {
+            payload["parent_comment_id"] = parentId
+        }
+        let encoded = try JSONEncoder().encode(payload)
+        return try await request(
+            endpoint: "/courses/\(courseId)/posts/\(postId)/comments",
+            method: "POST",
+            body: encoded
+        )
+    }
+
     func registerUser(uid: String, email: String, displayName: String) async throws {
         let body = try JSONEncoder().encode([
             "uid": uid,

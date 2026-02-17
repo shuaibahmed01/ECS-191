@@ -213,3 +213,231 @@ def get_user_by_id(uid):
     if not doc.exists:
         return None
     return doc.to_dict()
+
+
+# ── Forum (course-wide posts / comments / upvotes) ─────────────────────
+
+def get_posts_for_course(course_id):
+    """Return all posts for a course, newest first."""
+    db = _get_db()
+    posts_ref = db.collection("courses").document(course_id).collection("posts")
+    query = posts_ref.order_by("created_at", direction=firestore.Query.DESCENDING)
+    docs = query.stream()
+
+    posts = []
+    for doc in docs:
+        data = doc.to_dict()
+        ts = data.get("created_at")
+        if hasattr(ts, 'isoformat'):
+            timestamp_str = ts.strftime("%Y-%m-%dT%H:%M:%SZ")
+        else:
+            timestamp_str = str(ts) if ts else ""
+
+        posts.append({
+            "id": doc.id,
+            "course_id": course_id,
+            "author_id": data.get("author_id", ""),
+            "author_name": data.get("author_name", ""),
+            "title": data.get("title", ""),
+            "body": data.get("body", ""),
+            "upvote_count": data.get("upvote_count", 0),
+            "comment_count": data.get("comment_count", 0),
+            "created_at": timestamp_str,
+        })
+    return posts
+
+
+def create_post(course_id, author_id, author_name, title, body):
+    """Create a new forum post. Returns the post dict."""
+    db = _get_db()
+    posts_ref = db.collection("courses").document(course_id).collection("posts")
+
+    post_data = {
+        "author_id": author_id,
+        "author_name": author_name,
+        "title": title,
+        "body": body,
+        "upvote_count": 0,
+        "comment_count": 0,
+        "created_at": firestore.SERVER_TIMESTAMP,
+    }
+    result = posts_ref.add(post_data)
+    new_doc_ref = result[1]
+
+    return {
+        "id": new_doc_ref.id,
+        "course_id": course_id,
+        "author_id": author_id,
+        "author_name": author_name,
+        "title": title,
+        "body": body,
+        "upvote_count": 0,
+        "comment_count": 0,
+        "created_at": "",
+    }
+
+
+def get_post_by_id(course_id, post_id):
+    """Return a single post by ID, or None if not found."""
+    db = _get_db()
+    doc = (
+        db.collection("courses")
+        .document(course_id)
+        .collection("posts")
+        .document(post_id)
+        .get()
+    )
+    if not doc.exists:
+        return None
+    data = doc.to_dict()
+    ts = data.get("created_at")
+    if hasattr(ts, 'isoformat'):
+        timestamp_str = ts.strftime("%Y-%m-%dT%H:%M:%SZ")
+    else:
+        timestamp_str = str(ts) if ts else ""
+
+    return {
+        "id": doc.id,
+        "course_id": course_id,
+        "author_id": data.get("author_id", ""),
+        "author_name": data.get("author_name", ""),
+        "title": data.get("title", ""),
+        "body": data.get("body", ""),
+        "upvote_count": data.get("upvote_count", 0),
+        "comment_count": data.get("comment_count", 0),
+        "created_at": timestamp_str,
+    }
+
+
+def check_user_upvoted(course_id, post_id, user_id):
+    """Check if a user has upvoted a post."""
+    db = _get_db()
+    doc = (
+        db.collection("courses")
+        .document(course_id)
+        .collection("posts")
+        .document(post_id)
+        .collection("upvotes")
+        .document(user_id)
+        .get()
+    )
+    return doc.exists
+
+
+def toggle_upvote(course_id, post_id, user_id):
+    """Toggle upvote on a post. Returns (upvoted: bool, new_count: int)."""
+    db = _get_db()
+    post_ref = (
+        db.collection("courses")
+        .document(course_id)
+        .collection("posts")
+        .document(post_id)
+    )
+    upvote_ref = post_ref.collection("upvotes").document(user_id)
+    upvote_doc = upvote_ref.get()
+
+    if upvote_doc.exists:
+        upvote_ref.delete()
+        post_ref.update({"upvote_count": firestore.Increment(-1)})
+        # Read back updated count
+        updated = post_ref.get()
+        new_count = updated.to_dict().get("upvote_count", 0)
+        return False, new_count
+    else:
+        upvote_ref.set({"user_id": user_id})
+        post_ref.update({"upvote_count": firestore.Increment(1)})
+        updated = post_ref.get()
+        new_count = updated.to_dict().get("upvote_count", 0)
+        return True, new_count
+
+
+def get_comments_for_post(course_id, post_id):
+    """Return all comments for a post, ordered by path for threading."""
+    db = _get_db()
+    comments_ref = (
+        db.collection("courses")
+        .document(course_id)
+        .collection("posts")
+        .document(post_id)
+        .collection("comments")
+    )
+    query = comments_ref.order_by("path")
+    docs = query.stream()
+
+    comments = []
+    for doc in docs:
+        data = doc.to_dict()
+        ts = data.get("created_at")
+        if hasattr(ts, 'isoformat'):
+            timestamp_str = ts.strftime("%Y-%m-%dT%H:%M:%SZ")
+        else:
+            timestamp_str = str(ts) if ts else ""
+
+        comments.append({
+            "id": doc.id,
+            "post_id": post_id,
+            "author_id": data.get("author_id", ""),
+            "author_name": data.get("author_name", ""),
+            "body": data.get("body", ""),
+            "parent_comment_id": data.get("parent_comment_id"),
+            "path": data.get("path", ""),
+            "created_at": timestamp_str,
+        })
+    return comments
+
+
+def create_comment(course_id, post_id, author_id, author_name, body, parent_comment_id=None):
+    """Create a comment on a post. Returns the comment dict."""
+    db = _get_db()
+    comments_ref = (
+        db.collection("courses")
+        .document(course_id)
+        .collection("posts")
+        .document(post_id)
+        .collection("comments")
+    )
+
+    # Generate doc first to know its ID for the path
+    new_doc_ref = comments_ref.document()
+    comment_id = new_doc_ref.id
+
+    # Build path for threading
+    if parent_comment_id:
+        parent_doc = comments_ref.document(parent_comment_id).get()
+        if parent_doc.exists:
+            parent_path = parent_doc.to_dict().get("path", parent_comment_id)
+            path = f"{parent_path}/{comment_id}"
+        else:
+            path = comment_id
+    else:
+        path = comment_id
+
+    comment_data = {
+        "author_id": author_id,
+        "author_name": author_name,
+        "body": body,
+        "parent_comment_id": parent_comment_id,
+        "path": path,
+        "created_at": firestore.SERVER_TIMESTAMP,
+    }
+    new_doc_ref.set(comment_data)
+
+    # Increment comment count on the post
+    post_ref = (
+        db.collection("courses")
+        .document(course_id)
+        .collection("posts")
+        .document(post_id)
+    )
+    post_ref.update({"comment_count": firestore.Increment(1)})
+
+    return {
+        "id": comment_id,
+        "post_id": post_id,
+        "author_id": author_id,
+        "author_name": author_name,
+        "body": body,
+        "parent_comment_id": parent_comment_id,
+        "path": path,
+        "created_at": "",
+    }

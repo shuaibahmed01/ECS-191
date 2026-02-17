@@ -10,6 +10,11 @@ struct MainTabView: View {
                     Label("Schedule", systemImage: "calendar")
                 }
 
+            ForumCourseListView()
+                .tabItem {
+                    Label("Forum", systemImage: "bubble.left.and.bubble.right")
+                }
+
             ProfileView(authViewModel: authViewModel)
                 .tabItem {
                     Label("Profile", systemImage: "person.circle")
