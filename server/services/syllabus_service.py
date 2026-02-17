@@ -199,7 +199,15 @@ def chat_with_agent(class_id, user_id, user_message, conversation_history):
     if not syllabus:
         return "No syllabus has been uploaded for this course yet. Please upload a syllabus first so I can help answer your questions."
 
-    system_prompt = f"""You are a helpful course assistant for a university class. You answer student questions using the course syllabus as your primary reference.
+    # Load slide summaries
+    slides = get_slides(class_id)
+    slides_section = ""
+    if slides:
+        slides_section = "\n\nLecture Slides:\n"
+        for slide in slides:
+            slides_section += f"\n--- {slide['title']} ---\n{slide['summary']}\n"
+
+    system_prompt = f"""You are a helpful course assistant for a university class. You answer student questions using the course syllabus and lecture slides as your primary references.
 
 Here is the syllabus information:
 
@@ -210,13 +218,13 @@ Important Dates: {syllabus.get('important_dates', 'Not specified')}
 Course Policies: {syllabus.get('course_policies', 'Not specified')}
 
 Full Syllabus Summary:
-{syllabus.get('raw_summary', '')}
+{syllabus.get('raw_summary', '')}{slides_section}
 
 Instructions:
-- Answer questions based on the syllabus information above.
-- If the answer is not in the syllabus, say so clearly.
+- Answer questions based on the syllabus and lecture slide information above.
+- If the answer is not in the syllabus or slides, say so clearly.
 - Be concise and helpful.
-- If a student asks about something not covered in the syllabus, suggest they contact the instructor."""
+- If a student asks about something not covered in the syllabus or slides, suggest they contact the instructor."""
 
     # Build messages list from history + new message
     messages = []
@@ -235,6 +243,128 @@ Instructions:
     )
 
     return response.content[0].text
+
+
+def extract_slides(file_data_b64, file_type, class_id, class_name, title):
+    """
+    Call Claude with a PDF/image of lecture slides and extract a concise summary.
+
+    Args:
+        file_data_b64: Base64-encoded file data
+        file_type: MIME type (e.g. "application/pdf", "image/jpeg")
+        class_id: Firestore class document ID
+        class_name: Human-readable class name
+        title: User-provided slide title (e.g. "Week 3 - Sorting")
+
+    Returns:
+        str: concise summary of the slide content
+    """
+    client = _get_anthropic()
+
+    if file_type == "application/pdf":
+        file_content = {
+            "type": "document",
+            "source": {
+                "type": "base64",
+                "media_type": "application/pdf",
+                "data": file_data_b64,
+            },
+        }
+    else:
+        file_content = {
+            "type": "image",
+            "source": {
+                "type": "base64",
+                "media_type": file_type,
+                "data": file_data_b64,
+            },
+        }
+
+    extraction_prompt = f"""Analyze these lecture slides for {class_name} (titled "{title}").
+Extract a concise summary containing:
+- Main topics covered
+- Key definitions and concepts
+- Important formulas, algorithms, or frameworks mentioned
+- Any examples or case studies referenced
+
+Keep the summary concise (under 500 words). Focus on the key takeaways a student would need.
+Return ONLY the summary text, no JSON or markdown formatting."""
+
+    response = client.messages.create(
+        model=CLAUDE_MODEL,
+        max_tokens=2048,
+        messages=[
+            {
+                "role": "user",
+                "content": [
+                    file_content,
+                    {"type": "text", "text": extraction_prompt},
+                ],
+            }
+        ],
+    )
+
+    return response.content[0].text
+
+
+def save_slide(class_id, user_id, title, summary):
+    """
+    Write a slide entry to slides/{class_id}/entries/{auto_id}.
+
+    Returns:
+        str: the auto-generated slide document ID
+    """
+    db = _get_db()
+    entries_ref = db.collection("slides").document(class_id).collection("entries")
+    doc_ref = entries_ref.add({
+        "title": title,
+        "summary": summary,
+        "uploaded_by": user_id,
+        "uploaded_at": firestore.SERVER_TIMESTAMP,
+    })
+    return doc_ref[1].id
+
+
+def get_slides(class_id):
+    """
+    Return all slide entries for a class, sorted by upload time.
+
+    Returns:
+        list of dicts with id, title, summary, uploaded_by, uploaded_at
+    """
+    db = _get_db()
+    entries_ref = (
+        db.collection("slides")
+        .document(class_id)
+        .collection("entries")
+        .order_by("uploaded_at")
+    )
+    docs = entries_ref.stream()
+
+    slides = []
+    for doc in docs:
+        data = doc.to_dict()
+        ts = data.get("uploaded_at")
+        if hasattr(ts, "isoformat"):
+            ts_str = ts.strftime("%Y-%m-%dT%H:%M:%SZ")
+        elif ts is not None:
+            ts_str = str(ts)
+        else:
+            ts_str = ""
+        slides.append({
+            "id": doc.id,
+            "title": data.get("title", ""),
+            "summary": data.get("summary", ""),
+            "uploaded_by": data.get("uploaded_by", ""),
+            "uploaded_at": ts_str,
+        })
+    return slides
+
+
+def delete_slide(class_id, slide_id):
+    """Delete a single slide entry."""
+    db = _get_db()
+    db.collection("slides").document(class_id).collection("entries").document(slide_id).delete()
 
 
 def save_agent_chat_history(class_id, user_id, messages):

@@ -89,6 +89,18 @@ struct ClassDetailView: View {
                 }
 
                 NavigationLink {
+                    SlidesView(classId: entry.id, classCode: entry.classCode)
+                } label: {
+                    HStack(spacing: 12) {
+                        Image(systemName: "rectangle.stack.fill")
+                            .font(.title2)
+                            .foregroundStyle(.teal)
+                            .frame(width: 36)
+                        Text("Lecture Slides")
+                    }
+                }
+
+                NavigationLink {
                     CourseAgentView(classId: entry.id, classCode: entry.classCode)
                 } label: {
                     HStack(spacing: 12) {

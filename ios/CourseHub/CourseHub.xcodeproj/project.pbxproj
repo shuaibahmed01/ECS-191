@@ -13,6 +13,9 @@
 		4E5EF3252F31494F00FF68F4 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E5EF3242F31494F00FF68F4 /* LoginView.swift */; };
 		4E5EF3272F31496100FF68F4 /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E5EF3262F31496100FF68F4 /* MainTabView.swift */; };
 		4E6420E32F3EE1C80072AA7A /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 4E6420E22F3EE1C80072AA7A /* GoogleService-Info.plist */; };
+		4E6420E52F441CE30072AA7A /* SlideEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E6420E42F441CE30072AA7A /* SlideEntry.swift */; };
+		4E6420E72F441D080072AA7A /* SlidesViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E6420E62F441D080072AA7A /* SlidesViewModel.swift */; };
+		4E6420E92F441D1D0072AA7A /* SlidesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E6420E82F441D1D0072AA7A /* SlidesView.swift */; };
 		A1000001 /* CourseHubApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000001 /* CourseHubApp.swift */; };
 		A1000002 /* CourseClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000002 /* CourseClass.swift */; };
 		A1000003 /* UserScheduleEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000003 /* UserScheduleEntry.swift */; };
@@ -41,6 +44,9 @@
 		4E5EF3242F31494F00FF68F4 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
 		4E5EF3262F31496100FF68F4 /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
 		4E6420E22F3EE1C80072AA7A /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
+		4E6420E42F441CE30072AA7A /* SlideEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlideEntry.swift; sourceTree = "<group>"; };
+		4E6420E62F441D080072AA7A /* SlidesViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlidesViewModel.swift; sourceTree = "<group>"; };
+		4E6420E82F441D1D0072AA7A /* SlidesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlidesView.swift; sourceTree = "<group>"; };
 		A2000001 /* CourseHubApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CourseHubApp.swift; sourceTree = "<group>"; };
 		A2000002 /* CourseClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CourseClass.swift; sourceTree = "<group>"; };
 		A2000003 /* UserScheduleEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserScheduleEntry.swift; sourceTree = "<group>"; };
@@ -104,6 +110,7 @@
 		A5000003 /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				4E6420E42F441CE30072AA7A /* SlideEntry.swift */,
 				A2000002 /* CourseClass.swift */,
 				A2000003 /* UserScheduleEntry.swift */,
 				A2000010 /* ChatMessage.swift */,
@@ -116,6 +123,7 @@
 		A5000004 /* ViewModels */ = {
 			isa = PBXGroup;
 			children = (
+				4E6420E62F441D080072AA7A /* SlidesViewModel.swift */,
 				4E5EF3222F3148EF00FF68F4 /* AuthViewModel.swift */,
 				A2000005 /* ClassListViewModel.swift */,
 				A2000006 /* MyScheduleViewModel.swift */,
@@ -129,6 +137,7 @@
 		A5000005 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				4E6420E82F441D1D0072AA7A /* SlidesView.swift */,
 				4E5EF3242F31494F00FF68F4 /* LoginView.swift */,
 				A2000007 /* ClassListView.swift */,
 				A2000008 /* MyScheduleView.swift */,
@@ -231,6 +240,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4E6420E72F441D080072AA7A /* SlidesViewModel.swift in Sources */,
 				A1000001 /* CourseHubApp.swift in Sources */,
 				A1000002 /* CourseClass.swift in Sources */,
 				A1000003 /* UserScheduleEntry.swift in Sources */,
@@ -244,7 +254,9 @@
 				A1000010 /* ChatViewModel.swift in Sources */,
 				A1000011 /* ChatView.swift in Sources */,
 				4E5EF3232F3148EF00FF68F4 /* AuthViewModel.swift in Sources */,
+				4E6420E92F441D1D0072AA7A /* SlidesView.swift in Sources */,
 				A1000012 /* ClassDetailView.swift in Sources */,
+				4E6420E52F441CE30072AA7A /* SlideEntry.swift in Sources */,
 				4E5EF3272F31496100FF68F4 /* MainTabView.swift in Sources */,
 				A1000020 /* SyllabusContext.swift in Sources */,
 				A1000021 /* AgentMessage.swift in Sources */,
