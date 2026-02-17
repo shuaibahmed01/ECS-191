@@ -5,6 +5,7 @@ from services.syllabus_service import (
     extract_syllabus,
     save_syllabus_context,
     get_syllabus_context,
+    update_syllabus_context,
     chat_with_agent,
     save_agent_chat_history,
     get_agent_chat_history,
@@ -57,6 +58,34 @@ def upload_syllabus(class_id):
 
     context = get_syllabus_context(class_id)
     return jsonify({"syllabus": context}), 201
+
+
+@syllabus_bp.route("/classes/<class_id>/syllabus", methods=["PUT"])
+@require_auth
+def update_syllabus(class_id):
+    """Update specific syllabus fields. Requires auth + enrollment."""
+    if not is_user_enrolled(g.user_id, class_id):
+        return jsonify({"error": "Not enrolled in this class"}), 403
+
+    # Ensure syllabus exists before allowing edits
+    existing = get_syllabus_context(class_id)
+    if not existing:
+        return jsonify({"error": "No syllabus uploaded for this class"}), 404
+
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "Request body is required"}), 400
+
+    allowed_fields = {"instructor", "office_hours", "grading_policy", "important_dates", "course_policies"}
+    updates = {k: v for k, v in data.items() if k in allowed_fields and isinstance(v, str)}
+
+    if not updates:
+        return jsonify({"error": "No valid fields to update"}), 400
+
+    update_syllabus_context(class_id, g.user_id, updates)
+
+    context = get_syllabus_context(class_id)
+    return jsonify({"syllabus": context})
 
 
 @syllabus_bp.route("/classes/<class_id>/syllabus", methods=["GET"])

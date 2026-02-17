@@ -4,6 +4,9 @@ struct SyllabusUploadView: View {
     @State private var viewModel: SyllabusUploadViewModel
     @State private var showDocumentPicker = false
     @State private var showCamera = false
+    @State private var editingField: String?
+    @State private var editingTitle = ""
+    @State private var editText = ""
     @Environment(\.dismiss) private var dismiss
 
     let classCode: String
@@ -61,6 +64,40 @@ struct SyllabusUploadView: View {
                     Task { await viewModel.uploadImage(image) }
                 }
                 .ignoresSafeArea()
+            }
+            .sheet(isPresented: Binding(
+                get: { editingField != nil },
+                set: { if !$0 { editingField = nil } }
+            )) {
+                NavigationStack {
+                    VStack {
+                        TextEditor(text: $editText)
+                            .padding()
+                    }
+                    .navigationTitle("Edit \(editingTitle)")
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar {
+                        ToolbarItem(placement: .cancellationAction) {
+                            Button("Cancel") {
+                                editingField = nil
+                            }
+                        }
+                        ToolbarItem(placement: .confirmationAction) {
+                            if viewModel.isSaving {
+                                ProgressView()
+                            } else {
+                                Button("Save") {
+                                    guard let field = editingField else { return }
+                                    Task {
+                                        await viewModel.updateField(field, value: editText)
+                                        editingField = nil
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                .presentationDetents([.medium, .large])
             }
             .alert("Error", isPresented: .constant(viewModel.errorMessage != nil)) {
                 Button("OK") { viewModel.errorMessage = nil }
@@ -129,15 +166,15 @@ struct SyllabusUploadView: View {
 
     private func syllabusDetailView(_ context: SyllabusContext) -> some View {
         List {
-            infoSection(title: "Instructor", icon: "person.fill", color: .blue, content: context.instructor)
-            infoSection(title: "Office Hours", icon: "clock.fill", color: .green, content: context.officeHours)
-            infoSection(title: "Grading Policy", icon: "chart.bar.fill", color: .orange, content: context.gradingPolicy)
-            infoSection(title: "Important Dates", icon: "calendar", color: .red, content: context.importantDates)
-            infoSection(title: "Course Policies", icon: "list.clipboard.fill", color: .purple, content: context.coursePolicies)
+            infoSection(title: "Instructor", field: "instructor", icon: "person.fill", color: .blue, content: context.instructor)
+            infoSection(title: "Office Hours", field: "office_hours", icon: "clock.fill", color: .green, content: context.officeHours)
+            infoSection(title: "Grading Policy", field: "grading_policy", icon: "chart.bar.fill", color: .orange, content: context.gradingPolicy)
+            infoSection(title: "Important Dates", field: "important_dates", icon: "calendar", color: .red, content: context.importantDates)
+            infoSection(title: "Course Policies", field: "course_policies", icon: "list.clipboard.fill", color: .purple, content: context.coursePolicies)
         }
     }
 
-    private func infoSection(title: String, icon: String, color: Color, content: String) -> some View {
+    private func infoSection(title: String, field: String, icon: String, color: Color, content: String) -> some View {
         Section {
             VStack(alignment: .leading, spacing: 8) {
                 HStack(spacing: 8) {
@@ -145,12 +182,22 @@ struct SyllabusUploadView: View {
                         .foregroundStyle(color)
                     Text(title)
                         .font(.headline)
+                    Spacer()
+                    Image(systemName: "pencil")
+                        .font(.subheadline)
+                        .foregroundStyle(.tertiary)
                 }
                 Text(content)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             }
             .padding(.vertical, 4)
+            .contentShape(Rectangle())
+            .onTapGesture {
+                editingTitle = title
+                editText = content
+                editingField = field
+            }
         }
     }
 }

@@ -182,6 +182,15 @@ class APIClient {
         )
     }
 
+    func updateSyllabus(classId: String, fields: [String: String]) async throws -> SyllabusContextResponse {
+        let body = try JSONEncoder().encode(fields)
+        return try await request(
+            endpoint: "/classes/\(classId)/syllabus",
+            method: "PUT",
+            body: body
+        )
+    }
+
     func getSyllabusContext(classId: String) async throws -> SyllabusContextResponse {
         return try await request(
             endpoint: "/classes/\(classId)/syllabus"

@@ -4,6 +4,7 @@ import UIKit
 @Observable
 class SyllabusUploadViewModel {
     var isProcessing = false
+    var isSaving = false
     var errorMessage: String?
     var syllabusContext: SyllabusContext?
     var hasExistingSyllabus = false
@@ -46,6 +47,24 @@ class SyllabusUploadViewModel {
         }
         let base64 = jpegData.base64EncodedString()
         await upload(fileData: base64, fileType: "image/jpeg")
+    }
+
+    @MainActor
+    func updateField(_ field: String, value: String) async {
+        isSaving = true
+        errorMessage = nil
+
+        do {
+            let response = try await APIClient.shared.updateSyllabus(
+                classId: classId,
+                fields: [field: value]
+            )
+            syllabusContext = response.syllabus
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+
+        isSaving = false
     }
 
     @MainActor

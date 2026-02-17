@@ -156,6 +156,29 @@ def get_syllabus_context(class_id):
     return data
 
 
+def update_syllabus_context(class_id, user_id, updates):
+    """
+    Update specific fields of an existing syllabus context.
+
+    Args:
+        class_id: Firestore class document ID
+        user_id: UID of the editing user
+        updates: dict of field names to new values (only editable fields allowed)
+    """
+    db = _get_db()
+    doc_ref = db.collection("syllabus_context").document(class_id)
+
+    allowed_fields = {"instructor", "office_hours", "grading_policy", "important_dates", "course_policies"}
+    filtered = {k: v for k, v in updates.items() if k in allowed_fields}
+
+    if not filtered:
+        return
+
+    filtered["uploaded_by"] = user_id
+    filtered["uploaded_at"] = firestore.SERVER_TIMESTAMP
+    doc_ref.update(filtered)
+
+
 def chat_with_agent(class_id, user_id, user_message, conversation_history):
     """
     Send a message to the course agent. Uses syllabus context as system prompt.
