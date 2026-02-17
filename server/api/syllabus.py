@@ -9,6 +9,10 @@ from services.syllabus_service import (
     chat_with_agent,
     save_agent_chat_history,
     get_agent_chat_history,
+    extract_slides,
+    save_slide,
+    get_slides,
+    delete_slide,
 )
 from services.datastore_service import is_user_enrolled, get_class_by_id
 from services.auth_service import require_auth
@@ -123,6 +127,8 @@ def agent_chat(class_id):
     try:
         response_text = chat_with_agent(class_id, g.user_id, message, history)
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         return jsonify({"error": f"Agent error: {str(e)}"}), 500
 
     # Append new messages to history and save
@@ -142,3 +148,75 @@ def agent_history(class_id):
 
     history = get_agent_chat_history(class_id, g.user_id)
     return jsonify({"messages": history})
+
+
+# ── Slides endpoints ──────────────────────────────────────────────────────────
+
+
+@syllabus_bp.route("/classes/<class_id>/slides", methods=["POST"])
+@require_auth
+def upload_slides(class_id):
+    """Upload and process lecture slides. Requires auth + enrollment."""
+    if not is_user_enrolled(g.user_id, class_id):
+        return jsonify({"error": "Not enrolled in this class"}), 403
+
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "Request body is required"}), 400
+
+    file_data = data.get("file_data")
+    file_type = data.get("file_type")
+    title = data.get("title")
+
+    if not file_data or not file_type or not title:
+        return jsonify({"error": "file_data, file_type, and title are required"}), 400
+
+    allowed_types = ["application/pdf", "image/jpeg", "image/png", "image/webp"]
+    if file_type not in allowed_types:
+        return jsonify({"error": f"Unsupported file type. Allowed: {allowed_types}"}), 400
+
+    if len(file_data) > MAX_FILE_SIZE:
+        return jsonify({"error": "File too large. Maximum 10MB"}), 400
+
+    class_info = get_class_by_id(class_id)
+    class_name = class_info["class_name"] if class_info else class_id
+
+    try:
+        summary = extract_slides(file_data, file_type, class_id, class_name, title)
+        slide_id = save_slide(class_id, g.user_id, title, summary)
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": f"Failed to process slides: {str(e)}"}), 500
+
+    return jsonify({
+        "slide": {
+            "id": slide_id,
+            "title": title,
+            "summary": summary,
+            "uploaded_by": g.user_id,
+            "uploaded_at": "",
+        }
+    }), 201
+
+
+@syllabus_bp.route("/classes/<class_id>/slides", methods=["GET"])
+@require_auth
+def list_slides(class_id):
+    """List all slide summaries for a class. Requires auth + enrollment."""
+    if not is_user_enrolled(g.user_id, class_id):
+        return jsonify({"error": "Not enrolled in this class"}), 403
+
+    slides = get_slides(class_id)
+    return jsonify({"slides": slides})
+
+
+@syllabus_bp.route("/classes/<class_id>/slides/<slide_id>", methods=["DELETE"])
+@require_auth
+def remove_slide(class_id, slide_id):
+    """Delete a slide entry. Requires auth + enrollment."""
+    if not is_user_enrolled(g.user_id, class_id):
+        return jsonify({"error": "Not enrolled in this class"}), 403
+
+    delete_slide(class_id, slide_id)
+    return jsonify({"message": "Slide deleted"})

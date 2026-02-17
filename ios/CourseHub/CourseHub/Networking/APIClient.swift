@@ -214,6 +214,50 @@ class APIClient {
         )
     }
 
+    // MARK: - Slides
+
+    func uploadSlides(classId: String, fileDataBase64: String, fileType: String, title: String) async throws -> SlideUploadResponse {
+        let body = try JSONEncoder().encode([
+            "file_data": fileDataBase64,
+            "file_type": fileType,
+            "title": title,
+        ])
+        return try await request(
+            endpoint: "/classes/\(classId)/slides",
+            method: "POST",
+            body: body
+        )
+    }
+
+    func getSlides(classId: String) async throws -> SlideListResponse {
+        return try await request(
+            endpoint: "/classes/\(classId)/slides"
+        )
+    }
+
+    func deleteSlide(classId: String, slideId: String) async throws {
+        guard let url = URL(string: "\(baseURL)/classes/\(classId)/slides/\(slideId)") else {
+            throw APIError.invalidURL
+        }
+
+        var urlRequest = URLRequest(url: url)
+        urlRequest.httpMethod = "DELETE"
+        urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        let token = try await getAuthToken()
+        urlRequest.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+
+        let (_, response) = try await URLSession.shared.data(for: urlRequest)
+
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw APIError.invalidResponse
+        }
+
+        guard (200...299).contains(httpResponse.statusCode) else {
+            throw APIError.httpError(httpResponse.statusCode)
+        }
+    }
+
     func registerUser(uid: String, email: String, displayName: String) async throws {
         let body = try JSONEncoder().encode([
             "uid": uid,
