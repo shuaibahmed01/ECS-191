@@ -7,6 +7,8 @@ class CourseAgentViewModel {
     var isLoading = false
     var isSending = false
     var errorMessage: String?
+    var syllabusContext: SyllabusContext?
+    var isSyllabusLoading = false
 
     private let classId: String
 
@@ -29,6 +31,19 @@ class CourseAgentViewModel {
         }
 
         isLoading = false
+    }
+
+    @MainActor
+    func loadSyllabus() async {
+        isSyllabusLoading = true
+        do {
+            let response = try await APIClient.shared.getSyllabusContext(classId: classId)
+            syllabusContext = response.syllabus
+        } catch {
+            // No syllabus uploaded — not an error, just leave nil
+            syllabusContext = nil
+        }
+        isSyllabusLoading = false
     }
 
     @MainActor

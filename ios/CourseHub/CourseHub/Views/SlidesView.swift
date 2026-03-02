@@ -172,7 +172,7 @@ struct SlidesView: View {
         .sheet(item: $selectedSlide) { slide in
             NavigationStack {
                 ScrollView {
-                    Text(slide.summary)
+                    Text(slide.summary.markdownFormatted)
                         .padding()
                 }
                 .navigationTitle(slide.title)
@@ -199,7 +199,7 @@ struct SlidesView: View {
                     .foregroundStyle(.tertiary)
             }
             if !slide.summary.isEmpty {
-                Text(slide.summary)
+                Text(slide.summary.markdownFormatted)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .lineLimit(3)

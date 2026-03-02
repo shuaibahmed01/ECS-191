@@ -62,6 +62,20 @@ struct ClassDetailView: View {
 
             Section {
                 NavigationLink {
+                    CourseInsightsView(classId: entry.id, classCode: entry.classCode)
+                } label: {
+                    HStack(spacing: 12) {
+                        Image(systemName: "lightbulb.fill")
+                            .font(.title2)
+                            .foregroundStyle(.yellow)
+                            .frame(width: 36)
+                        Text("Course Insights")
+                    }
+                }
+            }
+
+            Section {
+                NavigationLink {
                     ChatView(classId: entry.id, classCode: entry.classCode)
                 } label: {
                     HStack(spacing: 12) {

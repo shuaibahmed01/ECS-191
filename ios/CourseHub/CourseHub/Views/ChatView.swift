@@ -99,7 +99,7 @@ struct MessageBubble: View {
                         .foregroundColor(.secondary)
                 }
 
-                Text(message.content)
+                Text(message.content.markdownFormatted)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 8)
                     .background(isCurrentUser ? Color.blue : Color(.systemGray5))

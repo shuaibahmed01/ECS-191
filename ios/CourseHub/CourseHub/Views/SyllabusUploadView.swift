@@ -187,7 +187,7 @@ struct SyllabusUploadView: View {
                         .font(.subheadline)
                         .foregroundStyle(.tertiary)
                 }
-                Text(content)
+                Text(content.markdownFormatted)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             }
