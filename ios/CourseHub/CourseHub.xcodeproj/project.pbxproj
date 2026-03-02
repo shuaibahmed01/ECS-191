@@ -38,6 +38,9 @@
 		A1000027 /* CameraPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000027 /* CameraPicker.swift */; };
 		A1000028 /* CourseInsightsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000028 /* CourseInsightsView.swift */; };
 		A1000029 /* String+Markdown.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000029 /* String+Markdown.swift */; };
+		A1000030 /* Flashcard.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000030 /* Flashcard.swift */; };
+		A1000031 /* FlashcardStudyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000031 /* FlashcardStudyView.swift */; };
+		A1000032 /* FlashcardCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000032 /* FlashcardCardView.swift */; };
 		CF68ADF02F3A00000018AC36 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = CF68ADEF2F3A00000018AC36 /* FirebaseFirestore */; };
 /* End PBXBuildFile section */
 
@@ -72,6 +75,9 @@
 		A2000027 /* CameraPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraPicker.swift; sourceTree = "<group>"; };
 		A2000028 /* CourseInsightsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CourseInsightsView.swift; sourceTree = "<group>"; };
 		A2000029 /* String+Markdown.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "String+Markdown.swift"; sourceTree = "<group>"; };
+		A2000030 /* Flashcard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Flashcard.swift; sourceTree = "<group>"; };
+		A2000031 /* FlashcardStudyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlashcardStudyView.swift; sourceTree = "<group>"; };
+		A2000032 /* FlashcardCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlashcardCardView.swift; sourceTree = "<group>"; };
 		A3000001 /* CourseHub.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CourseHub.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -121,6 +127,7 @@
 				A2000020 /* SyllabusContext.swift */,
 				A2000021 /* AgentMessage.swift */,
 				A2000029 /* String+Markdown.swift */,
+				A2000030 /* Flashcard.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -154,6 +161,8 @@
 				A2000026 /* DocumentPicker.swift */,
 				A2000027 /* CameraPicker.swift */,
 				A2000028 /* CourseInsightsView.swift */,
+				A2000031 /* FlashcardStudyView.swift */,
+				A2000032 /* FlashcardCardView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -274,6 +283,9 @@
 				A1000027 /* CameraPicker.swift in Sources */,
 				A1000028 /* CourseInsightsView.swift in Sources */,
 				A1000029 /* String+Markdown.swift in Sources */,
+				A1000030 /* Flashcard.swift in Sources */,
+				A1000031 /* FlashcardStudyView.swift in Sources */,
+				A1000032 /* FlashcardCardView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

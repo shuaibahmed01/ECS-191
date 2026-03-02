@@ -235,6 +235,21 @@ class APIClient {
         )
     }
 
+    // MARK: - Flashcards
+
+    func generateFlashcards(classId: String, slideId: String) async throws -> FlashcardResponse {
+        return try await request(
+            endpoint: "/classes/\(classId)/slides/\(slideId)/flashcards",
+            method: "POST"
+        )
+    }
+
+    func getFlashcards(classId: String, slideId: String) async throws -> FlashcardResponse {
+        return try await request(
+            endpoint: "/classes/\(classId)/slides/\(slideId)/flashcards"
+        )
+    }
+
     func deleteSlide(classId: String, slideId: String) async throws {
         guard let url = URL(string: "\(baseURL)/classes/\(classId)/slides/\(slideId)") else {
             throw APIError.invalidURL

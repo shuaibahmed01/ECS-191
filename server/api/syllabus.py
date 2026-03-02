@@ -13,6 +13,9 @@ from services.syllabus_service import (
     save_slide,
     get_slides,
     delete_slide,
+    generate_flashcards,
+    save_flashcards,
+    get_flashcards,
 )
 from services.datastore_service import is_user_enrolled, get_class_by_id
 from services.auth_service import require_auth
@@ -220,3 +223,46 @@ def remove_slide(class_id, slide_id):
 
     delete_slide(class_id, slide_id)
     return jsonify({"message": "Slide deleted"})
+
+
+# ── Flashcard endpoints ───────────────────────────────────────────────────────
+
+
+@syllabus_bp.route("/classes/<class_id>/slides/<slide_id>/flashcards", methods=["POST"])
+@require_auth
+def create_flashcards(class_id, slide_id):
+    """Generate flashcards from a slide. Idempotent: returns existing if already generated."""
+    if not is_user_enrolled(g.user_id, class_id):
+        return jsonify({"error": "Not enrolled in this class"}), 403
+
+    # Return existing flashcards if already generated
+    existing = get_flashcards(class_id, slide_id)
+    if existing:
+        return jsonify({"flashcards": existing})
+
+    try:
+        cards = generate_flashcards(class_id, slide_id)
+        save_flashcards(class_id, slide_id, cards)
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 404
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": f"Failed to generate flashcards: {str(e)}"}), 500
+
+    data = get_flashcards(class_id, slide_id)
+    return jsonify({"flashcards": data}), 201
+
+
+@syllabus_bp.route("/classes/<class_id>/slides/<slide_id>/flashcards", methods=["GET"])
+@require_auth
+def fetch_flashcards(class_id, slide_id):
+    """Fetch existing flashcards for a slide."""
+    if not is_user_enrolled(g.user_id, class_id):
+        return jsonify({"error": "Not enrolled in this class"}), 403
+
+    data = get_flashcards(class_id, slide_id)
+    if not data:
+        return jsonify({"error": "No flashcards generated for this slide"}), 404
+
+    return jsonify({"flashcards": data})

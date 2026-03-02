@@ -9,6 +9,7 @@ struct SlidesView: View {
     @State private var pendingFileData: Data?
     @State private var pendingImage: UIImage?
     @State private var selectedSlide: SlideEntry?
+    @State private var showFlashcardStudy: SlideEntry?
     @Environment(\.dismiss) private var dismiss
 
     let classCode: String
@@ -155,12 +156,17 @@ struct SlidesView: View {
     private var slideListView: some View {
         List {
             ForEach(viewModel.slides) { slide in
-                Button {
-                    selectedSlide = slide
-                } label: {
-                    slideRow(slide)
+                VStack(alignment: .leading, spacing: 10) {
+                    Button {
+                        selectedSlide = slide
+                    } label: {
+                        slideRow(slide)
+                    }
+                    .tint(.primary)
+
+                    flashcardButton(for: slide)
                 }
-                .tint(.primary)
+                .padding(.vertical, 4)
             }
             .onDelete { indexSet in
                 for index in indexSet {
@@ -184,6 +190,50 @@ struct SlidesView: View {
                 }
             }
         }
+        .fullScreenCover(item: $showFlashcardStudy) { slide in
+            if let cards = viewModel.flashcardsBySlideId[slide.id] {
+                FlashcardStudyView(cards: cards, slideTitle: slide.title)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func flashcardButton(for slide: SlideEntry) -> some View {
+        let cards = viewModel.flashcardsBySlideId[slide.id]
+        let isGenerating = viewModel.isGeneratingFlashcards.contains(slide.id)
+
+        if let cards, !cards.isEmpty {
+            Button {
+                showFlashcardStudy = slide
+            } label: {
+                Label("Study Flashcards (\(cards.count) cards)", systemImage: "rectangle.on.rectangle.angled")
+                    .font(.subheadline)
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.small)
+        } else {
+            Button {
+                Task { await viewModel.generateFlashcards(for: slide.id) }
+            } label: {
+                if isGenerating {
+                    HStack(spacing: 6) {
+                        ProgressView()
+                            .controlSize(.small)
+                        Text("Generating...")
+                            .font(.subheadline)
+                    }
+                    .frame(maxWidth: .infinity)
+                } else {
+                    Label("Create Study Flashcards", systemImage: "sparkles")
+                        .font(.subheadline)
+                        .frame(maxWidth: .infinity)
+                }
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.small)
+            .disabled(isGenerating)
+        }
     }
 
     private func slideRow(_ slide: SlideEntry) -> some View {
@@ -205,6 +255,5 @@ struct SlidesView: View {
                     .lineLimit(3)
             }
         }
-        .padding(.vertical, 4)
     }
 }

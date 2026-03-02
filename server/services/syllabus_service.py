@@ -403,3 +403,103 @@ def get_agent_chat_history(class_id, user_id):
         return []
     data = doc.to_dict()
     return data.get("messages", [])
+
+
+# ── Flashcard generation ──────────────────────────────────────────────────────
+
+
+def generate_flashcards(class_id, slide_id):
+    """
+    Generate study flashcards from a slide's summary using Claude.
+
+    Returns:
+        list of {"question": ..., "answer": ...} dicts
+    """
+    db = _get_db()
+    doc = (
+        db.collection("slides")
+        .document(class_id)
+        .collection("entries")
+        .document(slide_id)
+        .get()
+    )
+    if not doc.exists:
+        raise ValueError("Slide not found")
+
+    summary = doc.to_dict().get("summary", "")
+    if not summary:
+        raise ValueError("Slide has no summary")
+
+    client = _get_anthropic()
+
+    prompt = f"""Based on the following lecture summary, generate 5-8 study flashcards as question-answer pairs.
+Each flashcard should test a key concept, definition, or important detail from the material.
+
+Lecture summary:
+{summary}
+
+Return ONLY a JSON array of objects with "question" and "answer" keys. Example:
+[{{"question": "What is ...", "answer": "..."}}]"""
+
+    response = client.messages.create(
+        model=CLAUDE_MODEL,
+        max_tokens=2048,
+        messages=[{"role": "user", "content": prompt}],
+    )
+
+    response_text = response.content[0].text
+    # Strip markdown code fences if present
+    if response_text.startswith("```"):
+        lines = response_text.split("\n")
+        lines = lines[1:-1]
+        response_text = "\n".join(lines)
+
+    cards = json.loads(response_text)
+    return cards
+
+
+def save_flashcards(class_id, slide_id, cards):
+    """Write flashcards to slides/{class_id}/entries/{slide_id}/flashcards/data."""
+    db = _get_db()
+    doc_ref = (
+        db.collection("slides")
+        .document(class_id)
+        .collection("entries")
+        .document(slide_id)
+        .collection("flashcards")
+        .document("data")
+    )
+    doc_ref.set({
+        "cards": cards,
+        "generated_at": firestore.SERVER_TIMESTAMP,
+    })
+
+
+def get_flashcards(class_id, slide_id):
+    """
+    Read flashcards from Firestore.
+
+    Returns:
+        dict with "cards" list and "generated_at", or None if not found.
+    """
+    db = _get_db()
+    doc = (
+        db.collection("slides")
+        .document(class_id)
+        .collection("entries")
+        .document(slide_id)
+        .collection("flashcards")
+        .document("data")
+        .get()
+    )
+    if not doc.exists:
+        return None
+    data = doc.to_dict()
+    ts = data.get("generated_at")
+    if hasattr(ts, "isoformat"):
+        data["generated_at"] = ts.strftime("%Y-%m-%dT%H:%M:%SZ")
+    elif ts is not None:
+        data["generated_at"] = str(ts)
+    else:
+        data["generated_at"] = ""
+    return data

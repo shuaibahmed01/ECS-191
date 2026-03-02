@@ -7,6 +7,8 @@ class SlidesViewModel {
     var isLoading = false
     var isUploading = false
     var errorMessage: String?
+    var flashcardsBySlideId: [String: [Flashcard]] = [:]
+    var isGeneratingFlashcards: Set<String> = []
 
     private let classId: String
 
@@ -22,11 +24,37 @@ class SlidesViewModel {
         do {
             let response = try await APIClient.shared.getSlides(classId: classId)
             slides = response.slides
+            // Check for existing flashcards per slide
+            for slide in slides {
+                await loadFlashcards(for: slide.id)
+            }
         } catch {
             errorMessage = error.localizedDescription
         }
 
         isLoading = false
+    }
+
+    @MainActor
+    func generateFlashcards(for slideId: String) async {
+        isGeneratingFlashcards.insert(slideId)
+        do {
+            let response = try await APIClient.shared.generateFlashcards(classId: classId, slideId: slideId)
+            flashcardsBySlideId[slideId] = response.flashcards.cards
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+        isGeneratingFlashcards.remove(slideId)
+    }
+
+    @MainActor
+    func loadFlashcards(for slideId: String) async {
+        do {
+            let response = try await APIClient.shared.getFlashcards(classId: classId, slideId: slideId)
+            flashcardsBySlideId[slideId] = response.flashcards.cards
+        } catch {
+            // Silently ignore 404 (no flashcards yet)
+        }
     }
 
     @MainActor
