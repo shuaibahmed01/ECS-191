@@ -24,7 +24,7 @@ class CourseAgentViewModel {
         do {
             let response = try await APIClient.shared.getAgentHistory(classId: classId)
             messages = response.messages.map { msg in
-                AgentMessage(role: msg.role, content: msg.content)
+                AgentMessage(role: msg.role, content: msg.content, citations: msg.citations ?? [])
             }
         } catch {
             errorMessage = error.localizedDescription
@@ -62,7 +62,7 @@ class CourseAgentViewModel {
                 classId: classId,
                 message: text
             )
-            let agentMessage = AgentMessage(role: "assistant", content: response.response)
+            let agentMessage = AgentMessage(role: "assistant", content: response.response, citations: response.citations ?? [])
             messages.append(agentMessage)
         } catch {
             errorMessage = error.localizedDescription

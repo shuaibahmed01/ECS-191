@@ -3,6 +3,10 @@ import SwiftUI
 struct ChatView: View {
     @State private var viewModel: ChatViewModel
     let classCode: String
+    @State private var showingAttachMenu = false
+    @State private var showDocumentPicker = false
+    @State private var showCamera = false
+    @State private var pendingComment: String = ""
 
     init(classId: String, classCode: String) {
         self._viewModel = State(initialValue: ChatViewModel(classId: classId))
@@ -61,11 +65,31 @@ struct ChatView: View {
             Divider()
 
             // Message input
-            HStack(spacing: 12) {
+            HStack(spacing: 8) {
+                // Camera
+                Button {
+                    showCamera = true
+                } label: {
+                    Image(systemName: "camera.fill")
+                        .font(.title3)
+                }
+                .disabled(viewModel.isSending)
+                
+                // Document
+                Button {
+                    showDocumentPicker = true
+                } label: {
+                    Image(systemName: "doc.fill")
+                        .font(.title3)
+                }
+                .disabled(viewModel.isSending)
+                
+                // Text field
                 TextField("Message", text: $viewModel.messageText)
                     .textFieldStyle(.roundedBorder)
                     .disabled(viewModel.isSending)
-
+                
+                // Send
                 Button {
                     Task {
                         await viewModel.sendMessage()
@@ -81,7 +105,41 @@ struct ChatView: View {
                 }
                 .disabled(viewModel.messageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || viewModel.isSending)
             }
-            .padding()
+            .padding(.horizontal)
+            .padding(.vertical, 8)
+            .sheet(isPresented: $showDocumentPicker) {
+                NavigationStack {
+                    VStack {
+                        TextField("Optional comment...", text: $pendingComment)
+                            .textFieldStyle(.roundedBorder)
+                            .padding()
+                        DocumentPicker { data in
+                            showDocumentPicker = false
+                            let comment = pendingComment.isEmpty ? nil : pendingComment
+                            pendingComment = ""
+                            Task { await viewModel.sendPickedFile(data: data, mimeType: "application/pdf", comment: comment) }
+                        }
+                    }
+                    .navigationTitle("Choose File")
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar {
+                        ToolbarItem(placement: .cancellationAction) {
+                            Button("Cancel") { showDocumentPicker = false }
+                        }
+                    }
+                }
+                .presentationDetents([.medium, .large])
+            }
+            .fullScreenCover(isPresented: $showCamera) {
+                CameraPicker { image in
+                    showCamera = false
+                    guard let data = image.jpegData(compressionQuality: 0.85) else { return }
+                    let comment = pendingComment.isEmpty ? nil : pendingComment
+                    pendingComment = ""
+                    Task { await viewModel.sendPickedFile(data: data, mimeType: "image/jpeg", comment: comment) }
+                }
+                .ignoresSafeArea()
+            }
         }
         .navigationTitle(classCode)
         .navigationBarTitleDisplayMode(.inline)
@@ -123,12 +181,54 @@ struct MessageBubble: View {
                         .foregroundColor(.secondary)
                 }
 
-                Text(message.content.markdownFormatted)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
-                    .background(isCurrentUser ? Color.blue : Color(.systemGray5))
-                    .foregroundColor(isCurrentUser ? .white : .primary)
-                    .cornerRadius(16)
+                if let urlString = message.attachmentUrl, !urlString.isEmpty, let url = URL(string: urlString) {
+                    if message.attachmentType == "image" {
+                        AsyncImage(url: url) { phase in
+                            switch phase {
+                            case .empty:
+                                ProgressView().frame(width: 160, height: 120)
+                            case .success(let img):
+                                img
+                                    .resizable()
+                                    .scaledToFill()
+                                    .frame(maxWidth: 220, maxHeight: 180)
+                                    .clipped()
+                                    .cornerRadius(12)
+                            case .failure:
+                                Link(destination: url) {
+                                    HStack(spacing: 8) {
+                                        Image(systemName: "photo")
+                                        Text("View image")
+                                    }
+                                    .padding(10)
+                                    .background(Color(.systemGray6))
+                                    .cornerRadius(12)
+                                }
+                            @unknown default:
+                                EmptyView()
+                            }
+                        }
+                    } else {
+                        Link(destination: url) {
+                            HStack(spacing: 8) {
+                                Image(systemName: "doc.text")
+                                Text("Open attachment")
+                            }
+                            .padding(10)
+                            .background(Color(.systemGray6))
+                            .cornerRadius(12)
+                        }
+                    }
+                }
+
+                if !message.content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    Text(message.content.markdownFormatted)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .background(isCurrentUser ? Color.blue : Color(.systemGray5))
+                        .foregroundColor(isCurrentUser ? .white : .primary)
+                        .cornerRadius(16)
+                }
 
                 Text(message.timestamp, style: .time)
                     .font(.caption2)

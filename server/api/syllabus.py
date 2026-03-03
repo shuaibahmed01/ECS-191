@@ -131,7 +131,7 @@ def agent_chat(class_id):
     history = get_agent_chat_history(class_id, g.user_id)
 
     try:
-        response_text = chat_with_agent(class_id, g.user_id, message, history)
+        response_text, citations = chat_with_agent(class_id, g.user_id, message, history)
     except Exception as e:
         import traceback
         traceback.print_exc()
@@ -139,10 +139,10 @@ def agent_chat(class_id):
 
     # Append new messages to history and save
     history.append({"role": "user", "content": message})
-    history.append({"role": "assistant", "content": response_text})
+    history.append({"role": "assistant", "content": response_text, "citations": citations})
     save_agent_chat_history(class_id, g.user_id, history)
 
-    return jsonify({"response": response_text})
+    return jsonify({"response": response_text, "citations": citations})
 
 
 @syllabus_bp.route("/classes/<class_id>/agent/history", methods=["GET"])

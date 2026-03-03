@@ -201,12 +201,14 @@ def get_messages_for_class(class_id):
             "sender_id": data.get("sender_id", ""),
             "sender_name": data.get("sender_name", ""),
             "content": data.get("content", ""),
+            "attachment_url": data.get("attachment_url", ""),
+            "attachment_type": data.get("attachment_type", ""),
             "timestamp": timestamp_str,
         })
     return messages
 
 
-def create_message(class_id, sender_id, sender_name, content):
+def create_message(class_id, sender_id, sender_name, content, attachment_url=None, attachment_type=None):
     """
     Create a new message in a class chat.
     Returns the message dict.
@@ -217,9 +219,13 @@ def create_message(class_id, sender_id, sender_name, content):
     message_data = {
         "sender_id": sender_id,
         "sender_name": sender_name,
-        "content": content,
+        "content": content or "",
         "timestamp": firestore.SERVER_TIMESTAMP,
     }
+    if attachment_url:
+        message_data["attachment_url"] = attachment_url
+    if attachment_type:
+        message_data["attachment_type"] = attachment_type
     doc_ref = messages_ref.add(message_data)
     # .add() returns a tuple of (timestamp, doc_ref)
     new_doc_ref = doc_ref[1]
@@ -230,8 +236,37 @@ def create_message(class_id, sender_id, sender_name, content):
         "sender_id": sender_id,
         "sender_name": sender_name,
         "content": content,
+        "attachment_url": attachment_url or "",
+        "attachment_type": attachment_type or "",
         "timestamp": "",  # server timestamp not yet resolved
     }
+
+
+def get_enrolled_class_ids(user_id):
+    """Return a list of class_ids the user is enrolled in."""
+    classes = get_user_classes(user_id)
+    return [c["id"] for c in classes]
+
+
+def get_recent_messages_for_class(class_id, limit=100):
+    """Return up to `limit` most recent messages for a class."""
+    db = _get_db()
+    messages_ref = db.collection("classes").document(class_id).collection("messages")
+    query = messages_ref.order_by("timestamp", direction=firestore.Query.DESCENDING).limit(limit)
+    docs = query.stream()
+    result = []
+    for doc in docs:
+        data = doc.to_dict()
+        result.append({
+            "id": doc.id,
+            "class_id": class_id,
+            "sender_id": data.get("sender_id", ""),
+            "sender_name": data.get("sender_name", ""),
+            "content": data.get("content", ""),
+            "attachment_url": data.get("attachment_url", ""),
+            "attachment_type": data.get("attachment_type", ""),
+        })
+    return result
 
 
 def create_user(uid, email, display_name):

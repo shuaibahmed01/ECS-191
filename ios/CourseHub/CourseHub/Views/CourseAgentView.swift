@@ -3,10 +3,13 @@ import SwiftUI
 struct CourseAgentView: View {
     @State private var viewModel: CourseAgentViewModel
     @State private var expandedCard: String?
+    @State private var highlightFieldForSyllabus: String?
+    let classId: String
     let classCode: String
 
     init(classId: String, classCode: String) {
         self._viewModel = State(initialValue: CourseAgentViewModel(classId: classId))
+        self.classId = classId
         self.classCode = classCode
     }
 
@@ -20,7 +23,12 @@ struct CourseAgentView: View {
                     } else {
                         LazyVStack(spacing: 12) {
                             ForEach(viewModel.messages) { message in
-                                AgentMessageBubble(message: message)
+                                AgentMessageBubble(
+                                    message: message,
+                                    onTapCitation: { field in
+                                        highlightFieldForSyllabus = field
+                                    }
+                                )
                                     .id(message.id)
                             }
 
@@ -95,6 +103,9 @@ struct CourseAgentView: View {
             Button("OK") { viewModel.errorMessage = nil }
         } message: {
             Text(viewModel.errorMessage ?? "")
+        }
+        .sheet(item: $highlightFieldForSyllabus) { field in
+            SyllabusUploadView(classId: classId, classCode: classCode, highlightField: field)
         }
         .sheet(item: $expandedCard) { cardId in
             SyllabusCardDetailSheet(
@@ -414,6 +425,7 @@ extension String: @retroactive Identifiable {
 
 struct AgentMessageBubble: View {
     let message: AgentMessage
+    var onTapCitation: (String) -> Void = { _ in }
 
     private var isUser: Bool { message.role == "user" }
 
@@ -439,9 +451,43 @@ struct AgentMessageBubble: View {
                     .background(isUser ? Color.blue : Color(.systemGray5))
                     .foregroundColor(isUser ? .white : .primary)
                     .cornerRadius(16)
+
+                if !isUser && !message.citations.isEmpty {
+                    HStack(spacing: 8) {
+                        ForEach(message.citations, id: \.self) { cite in
+                            Button {
+                                onTapCitation(cite.field)
+                            } label: {
+                                HStack(spacing: 6) {
+                                    Image(systemName: "bookmark")
+                                        .font(.caption2)
+                                    Text(_titleForField(cite.field))
+                                        .font(.caption)
+                                }
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 6)
+                                .background(Color(.systemGray6))
+                                .cornerRadius(12)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                    .padding(.top, 2)
+                }
             }
 
             if !isUser { Spacer(minLength: 60) }
+        }
+    }
+
+    private func _titleForField(_ field: String) -> String {
+        switch field {
+        case "instructor": return "Instructor"
+        case "office_hours": return "Office Hours"
+        case "grading_policy": return "Grading"
+        case "important_dates": return "Important Dates"
+        case "course_policies": return "Policies"
+        default: return "Syllabus"
         }
     }
 }

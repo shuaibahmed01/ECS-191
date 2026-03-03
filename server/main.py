@@ -8,7 +8,9 @@ from api.classes import classes_bp
 from api.chat import chat_bp
 from api.users import users_bp
 from api.syllabus import syllabus_bp
+from api.search import search_bp
 from services.auth_service import init_firebase
+from api.uploads import uploads_bp
 
 
 def create_app():
@@ -23,6 +25,8 @@ def create_app():
     app.register_blueprint(chat_bp, url_prefix="/v1")
     app.register_blueprint(users_bp, url_prefix="/v1")
     app.register_blueprint(syllabus_bp, url_prefix="/v1")
+    app.register_blueprint(search_bp, url_prefix="/v1")
+    app.register_blueprint(uploads_bp, url_prefix="/v1")
 
     @app.route("/health", methods=["GET"])
     def health():

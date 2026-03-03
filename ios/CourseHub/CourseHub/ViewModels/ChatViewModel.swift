@@ -86,4 +86,53 @@ class ChatViewModel {
         guard let userId = currentUserId else { return false }
         return message.senderId == userId
     }
+
+    @MainActor
+    func sendAttachmentLink(url: String, comment: String?) async {
+        let trimmedUrl = url.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedUrl.isEmpty else { return }
+        isSending = true
+        errorMessage = nil
+        do {
+            _ = try await APIClient.shared.sendMessage(
+                classId: classId,
+                content: comment?.trimmingCharacters(in: .whitespacesAndNewlines) ?? "",
+                attachmentUrl: trimmedUrl,
+                attachmentType: "link"
+            )
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+        isSending = false
+    }
+
+    @MainActor
+    func sendPickedFile(data: Data, mimeType: String, comment: String? = nil) async {
+        isSending = true
+        errorMessage = nil
+        do {
+            let encoded = data.base64EncodedString()
+            let upload = try await APIClient.shared.uploadAttachment(fileDataBase64: encoded, fileType: mimeType)
+            _ = try await APIClient.shared.sendMessage(
+                classId: classId,
+                content: comment?.trimmingCharacters(in: .whitespacesAndNewlines) ?? "",
+                attachmentUrl: absoluteURL(upload.url),
+                attachmentType: mimeToType(upload.type)
+            )
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+        isSending = false
+    }
+
+    private func absoluteURL(_ pathOrUrl: String) -> String {
+        if pathOrUrl.hasPrefix("http") { return pathOrUrl }
+        return "http://localhost:5001\(pathOrUrl)"
+    }
+
+    private func mimeToType(_ mime: String) -> String {
+        if mime.starts(with: "image/") { return "image" }
+        if mime == "application/pdf" { return "pdf" }
+        return "file"
+    }
 }

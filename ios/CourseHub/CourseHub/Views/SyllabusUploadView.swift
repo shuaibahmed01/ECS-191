@@ -7,29 +7,42 @@ struct SyllabusUploadView: View {
     @State private var editingField: String?
     @State private var editingTitle = ""
     @State private var editText = ""
+    @State private var highlightField: String?
     @Environment(\.dismiss) private var dismiss
 
     let classCode: String
 
-    init(classId: String, classCode: String) {
+    init(classId: String, classCode: String, highlightField: String? = nil) {
         self._viewModel = State(initialValue: SyllabusUploadViewModel(classId: classId))
         self.classCode = classCode
+        self._highlightField = State(initialValue: highlightField)
     }
 
     var body: some View {
         NavigationStack {
-            Group {
+            ScrollViewReader { proxy in
+                Group {
                 if viewModel.isProcessing {
                     processingView
                 } else if let context = viewModel.syllabusContext {
-                    syllabusDetailView(context)
+                        syllabusDetailView(context)
                 } else {
                     uploadPromptView
                 }
-            }
-            .navigationTitle("Syllabus")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
+                }
+                .onAppear {
+                    // Attempt to scroll to the highlighted field shortly after appear
+                    if let target = highlightField {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+                            withAnimation {
+                                proxy.scrollTo(target, anchor: .top)
+                            }
+                        }
+                    }
+                }
+                .navigationTitle("Syllabus")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Done") { dismiss() }
                 }
@@ -51,6 +64,7 @@ struct SyllabusUploadView: View {
                         }
                     }
                 }
+                } // END ScrollViewReader content
             }
             .sheet(isPresented: $showDocumentPicker) {
                 DocumentPicker { data in
@@ -167,10 +181,15 @@ struct SyllabusUploadView: View {
     private func syllabusDetailView(_ context: SyllabusContext) -> some View {
         List {
             infoSection(title: "Instructor", field: "instructor", icon: "person.fill", color: .blue, content: context.instructor)
+                .id("instructor")
             infoSection(title: "Office Hours", field: "office_hours", icon: "clock.fill", color: .green, content: context.officeHours)
+                .id("office_hours")
             infoSection(title: "Grading Policy", field: "grading_policy", icon: "chart.bar.fill", color: .orange, content: context.gradingPolicy)
+                .id("grading_policy")
             infoSection(title: "Important Dates", field: "important_dates", icon: "calendar", color: .red, content: context.importantDates)
+                .id("important_dates")
             infoSection(title: "Course Policies", field: "course_policies", icon: "list.clipboard.fill", color: .purple, content: context.coursePolicies)
+                .id("course_policies")
 
             Section {
                 Button {
@@ -211,6 +230,8 @@ struct SyllabusUploadView: View {
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             }
+            .background((highlightField == field) ? Color.yellow.opacity(0.18) : Color.clear)
+            .cornerRadius(8)
             .padding(.vertical, 4)
             .contentShape(Rectangle())
             .onTapGesture {

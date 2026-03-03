@@ -204,7 +204,7 @@ def chat_with_agent(class_id, user_id, user_message, conversation_history):
         conversation_history: List of prior messages [{"role": "user"/"assistant", "content": "..."}]
 
     Returns:
-        The assistant's response text
+        tuple[str, list[dict]]: (assistant response, citations)
     """
     client = _get_anthropic()
 
@@ -256,7 +256,45 @@ Instructions:
         messages=messages,
     )
 
-    return response.content[0].text
+    text = response.content[0].text
+    citations = _derive_citations(text, syllabus)
+    return text, citations
+
+
+def _derive_citations(answer_text: str, syllabus_ctx: dict) -> list[dict]:
+    """
+    Heuristic citation extraction: map common keywords to syllabus fields and
+    return lightweight citation objects the client can render and deep-link.
+    """
+    if not syllabus_ctx:
+        return []
+    answer_lower = (answer_text or "").lower()
+    field_map = [
+        ("office_hours", ["office hour", "office-hour", "officehours", "oh", "ohs"]),
+        ("grading_policy", ["grade", "grading", "points", "percentage", "rubric"]),
+        ("important_dates", ["exam", "midterm", "final", "deadline", "due", "date", "schedule"]),
+        ("course_policies", ["policy", "late", "integrity", "plagiarism", "attendance"]),
+        ("instructor", ["instructor", "professor", "prof", "lecturer", "ta", "teaching assistant"]),
+    ]
+    citations = []
+    for field, keywords in field_map:
+        if any(k in answer_lower for k in keywords):
+            preview = str(syllabus_ctx.get(field, ""))[:180]
+            if preview:
+                citations.append({
+                    "field": field,
+                    "preview": preview
+                })
+    # De-duplicate by field
+    seen = set()
+    unique = []
+    for c in citations:
+        f = c["field"]
+        if f in seen:
+            continue
+        seen.add(f)
+        unique.append(c)
+    return unique
 
 
 def extract_slides(file_data_b64, file_type, class_id, class_name, title):

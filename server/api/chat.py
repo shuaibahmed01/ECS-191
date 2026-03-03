@@ -38,14 +38,16 @@ def post_message(class_id):
         return jsonify({"error": "Request body is required"}), 400
 
     content = data.get("content")
+    attachment_url = data.get("attachment_url")
+    attachment_type = data.get("attachment_type")
 
-    if not content:
-        return jsonify({"error": "content is required"}), 400
+    if not content and not attachment_url:
+        return jsonify({"error": "content or attachment_url is required"}), 400
 
     # Get sender info from authenticated user
     sender_id = g.user_id
     user = get_user_by_id(sender_id)
     sender_name = user["display_name"] if user else g.user_name or "Unknown"
 
-    message = create_message(class_id, sender_id, sender_name, content)
+    message = create_message(class_id, sender_id, sender_name, content, attachment_url, attachment_type)
     return jsonify(message), 201

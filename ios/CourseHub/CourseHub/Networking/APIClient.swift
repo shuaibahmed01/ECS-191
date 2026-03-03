@@ -177,12 +177,30 @@ class APIClient {
         }
     }
 
-    func sendMessage(classId: String, content: String) async throws -> ChatMessageResponse {
-        let body = try JSONEncoder().encode([
-            "content": content
-        ])
+    func sendMessage(classId: String, content: String, attachmentUrl: String? = nil, attachmentType: String? = nil) async throws -> ChatMessageResponse {
+        var dict: [String: Any] = ["content": content]
+        if let attachmentUrl { dict["attachment_url"] = attachmentUrl }
+        if let attachmentType { dict["attachment_type"] = attachmentType }
+        let body = try JSONSerialization.data(withJSONObject: dict, options: [])
         return try await request(
             endpoint: "/classes/\(classId)/messages",
+            method: "POST",
+            body: body
+        )
+    }
+
+    struct UploadResponse: Codable {
+        let url: String
+        let type: String
+    }
+
+    func uploadAttachment(fileDataBase64: String, fileType: String) async throws -> UploadResponse {
+        let body = try JSONEncoder().encode([
+            "file_data": fileDataBase64,
+            "file_type": fileType
+        ])
+        return try await request(
+            endpoint: "/uploads",
             method: "POST",
             body: body
         )
@@ -232,6 +250,45 @@ class APIClient {
         return try await request(
             endpoint: "/classes/\(classId)/agent/history"
         )
+    }
+    
+    // MARK: - Classes (single)
+    func fetchClass(classId: String) async throws -> CourseClass {
+        return try await request(endpoint: "/classes/\(classId)", requiresAuth: false)
+    }
+    
+    struct GlobalSearchResponse: Codable {
+        let results: [GlobalSearchResult]
+    }
+    
+    struct GlobalSearchResult: Codable, Identifiable {
+        // Computed ID composed of type + class_id + optional message/field
+        var id: String { "\(type)-\(classId)-\(messageId ?? field ?? UUID().uuidString)" }
+        let type: String
+        let classId: String
+        let classCode: String?
+        let field: String?
+        let messageId: String?
+        let senderName: String?
+        let snippet: String
+        
+        enum CodingKeys: String, CodingKey {
+            case type
+            case classId = "class_id"
+            case classCode = "class_code"
+            case field
+            case messageId = "message_id"
+            case senderName = "sender_name"
+            case snippet
+        }
+    }
+    
+    func globalSearch(query: String, types: [String] = ["syllabus","chat"]) async throws -> [GlobalSearchResult] {
+        let typesStr = types.joined(separator: ",")
+        let qEnc = query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? query
+        let endpoint = "/search?q=\(qEnc)&types=\(typesStr)"
+        let response: GlobalSearchResponse = try await request(endpoint: endpoint)
+        return response.results
     }
 
     // MARK: - Slides

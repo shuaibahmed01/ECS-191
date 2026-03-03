@@ -81,6 +81,13 @@ struct MyScheduleView: View {
                     Text(greeting)
                         .font(.headline)
                 }
+                ToolbarItem(placement: .topBarTrailing) {
+                    NavigationLink {
+                        GlobalSearchView()
+                    } label: {
+                        Image(systemName: "magnifyingglass")
+                    }
+                }
             }
             .sheet(isPresented: $showingAddClass) {
                 ClassListView(
