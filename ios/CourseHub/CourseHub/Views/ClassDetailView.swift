@@ -3,6 +3,10 @@ import SwiftUI
 struct ClassDetailView: View {
     let entry: UserScheduleEntry
     @State private var showSyllabusSheet = false
+    @State private var isRemoving = false
+    @State private var showRemoveConfirm = false
+    @State private var removeError: String?
+    @Environment(\.dismiss) private var dismiss
 
     private var lectureSummary: String? {
         guard let times = entry.lectureTimes, !times.isEmpty else { return nil }
@@ -11,6 +15,33 @@ struct ClassDetailView: View {
 
     var body: some View {
         List {
+            // Prominent Group Chat callout for better discoverability
+            Section {
+                NavigationLink {
+                    ChatView(classId: entry.id, classCode: entry.classCode)
+                } label: {
+                    HStack(spacing: 12) {
+                        Image(systemName: "bubble.left.and.bubble.right.fill")
+                            .font(.title2.bold())
+                            .foregroundStyle(.white)
+                            .frame(width: 36, height: 36)
+                            .background(Color.blue)
+                            .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Open Class Group Chat")
+                                .font(.headline)
+                            Text("Chat with classmates, ask questions, share resources")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .foregroundStyle(.tertiary)
+                    }
+                    .padding(.vertical, 6)
+                }
+            }
+
             Section {
                 HStack(spacing: 12) {
                     Image(systemName: "book.fill")
@@ -74,19 +105,7 @@ struct ClassDetailView: View {
                 }
             }
 
-            Section {
-                NavigationLink {
-                    ChatView(classId: entry.id, classCode: entry.classCode)
-                } label: {
-                    HStack(spacing: 12) {
-                        Image(systemName: "bubble.left.and.bubble.right.fill")
-                            .font(.title2)
-                            .foregroundStyle(.blue)
-                            .frame(width: 36)
-                        Text("Class Group Chat")
-                    }
-                }
-            }
+            
 
             Section("Syllabus & AI") {
                 Button {
@@ -126,12 +145,54 @@ struct ClassDetailView: View {
                     }
                 }
             }
+
+            // Destructive action to remove class (more discoverable than swipe)
+            Section {
+                Button(role: .destructive) {
+                    showRemoveConfirm = true
+                } label: {
+                    HStack {
+                        Spacer()
+                        if isRemoving {
+                            ProgressView()
+                        } else {
+                            Text("Remove from Schedule")
+                        }
+                        Spacer()
+                    }
+                }
+                .disabled(isRemoving)
+            }
         }
         .sheet(isPresented: $showSyllabusSheet) {
             SyllabusUploadView(classId: entry.id, classCode: entry.classCode)
         }
         .navigationTitle(entry.classCode)
         .navigationBarTitleDisplayMode(.inline)
+        .alert("Error", isPresented: .constant(removeError != nil)) {
+            Button("OK") { removeError = nil }
+        } message: {
+            Text(removeError ?? "")
+        }
+        .confirmationDialog(
+            "Remove \(entry.classCode) from your schedule?",
+            isPresented: $showRemoveConfirm,
+            titleVisibility: .visible
+        ) {
+            Button("Remove", role: .destructive) {
+                Task {
+                    isRemoving = true
+                    do {
+                        try await APIClient.shared.unenroll(enrollmentId: entry.enrollmentId)
+                        dismiss()
+                    } catch {
+                        removeError = error.localizedDescription
+                    }
+                    isRemoving = false
+                }
+            }
+            Button("Cancel", role: .cancel) {}
+        }
     }
 }
 

@@ -54,6 +54,49 @@ def get_class_by_id(class_id):
         "discussion_times": data.get("discussion_times", []),
     }
 
+def _slugify_code(code: str) -> str:
+    """
+    Convert a human-readable class code into a Firestore-safe document ID.
+    Example: 'MGT 120' -> 'mgt_120'
+    """
+    import re
+    slug = code.strip().lower()
+    slug = re.sub(r"\s+", "_", slug)
+    slug = re.sub(r"[^a-z0-9_]", "", slug)
+    return slug
+
+def create_class(code: str, name: str, lecture_times=None, discussion_times=None):
+    """
+    Create or upsert a class in the courses collection.
+    Returns the created class dict. If the class already exists, returns the existing data.
+    """
+    db = _get_db()
+    lecture_times = lecture_times or []
+    discussion_times = discussion_times or []
+
+    class_id = _slugify_code(code) or _slugify_code(name)
+    if not class_id:
+        raise ValueError("Invalid class identifier")
+
+    doc_ref = db.collection("courses").document(class_id)
+    existing = doc_ref.get()
+    data = {
+        "code": code,
+        "name": name,
+        "lecture_times": lecture_times,
+        "discussion_times": discussion_times,
+    }
+    # Upsert to allow users to fix typos or add times later
+    doc_ref.set(data, merge=True)
+
+    return {
+        "id": class_id,
+        "class_code": code,
+        "class_name": name,
+        "lecture_times": lecture_times,
+        "discussion_times": discussion_times,
+    }
+
 
 def enroll_user(user_id, class_id):
     """

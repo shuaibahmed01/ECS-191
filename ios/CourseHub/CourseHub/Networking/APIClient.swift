@@ -118,6 +118,26 @@ class APIClient {
         return response.classes
     }
 
+    func createCustomClass(
+        classCode: String,
+        className: String,
+        lectureTimes: [String]? = nil,
+        discussionTimes: [String]? = nil
+    ) async throws -> CourseClass {
+        var payload: [String: Any] = [
+            "class_code": classCode,
+            "class_name": className
+        ]
+        if let lectureTimes { payload["lecture_times"] = lectureTimes }
+        if let discussionTimes { payload["discussion_times"] = discussionTimes }
+        let body = try JSONSerialization.data(withJSONObject: payload, options: [])
+        return try await request(
+            endpoint: "/classes",
+            method: "POST",
+            body: body
+        )
+    }
+
     func enrollInClass(classId: String) async throws -> UserScheduleEntry {
         let body = try JSONEncoder().encode(["class_id": classId])
         return try await request(
