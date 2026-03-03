@@ -132,6 +132,16 @@ It was easy because the material is sort of just hard coded. I'd describe it as 
 
 I'm taking non-cs classes that aren't in there so if there was maybe a way that I could add my own class it would be helpful? Or some way to get my MGT courses. Otherwise, it's pretty decent but I wouldn't end up using it that much because I'm a graduating senior and used to the canvas flow.
 
+## Phase 2 Changes
+
+Based on the feedback above, we made the following changes:
+
+1. **Prominent "Open Class Group Chat" entry** (User #4) — Added a large callout at the top of `ClassDetailView` with icon, description, and chevron to make the class group chat clearly discoverable.
+
+2. **Explicit "Remove from Schedule" action** (User #5) — Added a destructive "Remove from Schedule" button with confirmation inside `ClassDetailView`, complementing the existing swipe-to-delete on `MyScheduleView`.
+
+3. **Support for custom/non-listed courses** (User #6) — Introduced an "Add Custom" flow in `ClassListView` to create and immediately enroll in courses outside the default catalog (e.g., MGT). Client calls `APIClient.createCustomClass(...)` which hits `POST /v1/classes` (auth required); the server upserts into the course catalog via `server/services/datastore_service.py`.
+
 ## Phase 3
 ### User # 7
 ### User # 8
