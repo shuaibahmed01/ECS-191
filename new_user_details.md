@@ -202,3 +202,15 @@ Based on the feedback above, we made the following changes:
 4. Other Notes:
 
 - Global search across classes, chat, and syllabus with filters.
+
+## Phase 3 Changes
+
+Based on the feedback above, we made the following changes:
+
+1. **Inline AI citations with syllabus jump** (User #7) — Assistant replies now include tappable citation chips that open `Syllabus` scrolled to and highlighted on the referenced section (e.g., Office Hours, Grading).
+
+2. **Native chat attachments with previews** (User #8) — Replaced link input with iMessage-style attachments. Users can take a photo or choose a file; images render inline previews in `ChatView`.
+
+3. **Global Search improvements** (User #9) — Results now show a course tag (e.g., “ECS 154A”), match tokenized queries (including numeric class hints like “154 midterm”), and navigate directly to the correct class `Chat` or `Syllabus`.
+
+4. **UI polish from testing** — Removed redundant chevrons in `ClassDetailView` callout, standardized back navigation (removed “Close” in Search), and ensured chat titles display the proper course code.
