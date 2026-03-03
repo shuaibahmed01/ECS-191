@@ -25,10 +25,7 @@
 - We should think of how to pre-populate some parts of the app so it’s a little more intuitive to use (ex: class gc was empty -> daunting to send first message)
 
 ### User # 2
-### User # 3
 
-## Phase 2
-### User # 4
 1. What do you think this app does?  
 
 - "Seems like some kind of planner app where you can keep track of all your classes, anything related to the class in terms of materials. seems like you can. Almost like AI-driven Canvas."
@@ -50,14 +47,9 @@
 - It doesn't seem like theres any other point of having the profile except signing out? -> Told him its for ensuring UC Davis student use and also having a user name when talking to a class.
 - What happens if there's multiple sections to a course? -> need to work this out
 - Is there any way to make cummulative/summary notes thing from the AI -> there is technically, from the Course Agent chat, but we shouldn't rely on this being in chat format. Chat format, as mentioned, should be our last resort.
+  
+### User # 3
 
-### User # 5
-### User # 6
-
-## Phase 3
-### User # 7
-### User # 8
-### User # 9
 1. What do you think this app does?
 - "Looks like it stores information on classes. It has slides, class information, syllabus, Course Agent, and a groupchat with what I'm assuming is other students."
 2. Do you trust the AI results? (after having them complete their AI-related task)
@@ -69,3 +61,13 @@
 - User complimented our app! Said they would use this as is.
 - They appreciated the class groupchat feature. They ran into a problem last week where they were trying to get into a class discord that they forgot to join, but the invite link sent through Canvas inbox had long expired. With our app, the groupchat is always available to students in the related class.
 
+
+## Phase 2
+### User # 4
+### User # 5
+### User # 6
+
+## Phase 3
+### User # 7
+### User # 8
+### User # 9
