@@ -106,6 +106,20 @@ Return ONLY the JSON object, no other text."""
         response_text = "\n".join(lines)
 
     extracted = json.loads(response_text)
+
+    # Validate that the uploaded file actually contained syllabus content.
+    # If most fields came back as "Not specified", the file likely wasn't a syllabus.
+    not_specified_count = sum(
+        1
+        for key in ("instructor", "office_hours", "grading_policy", "important_dates", "course_policies")
+        if extracted.get(key, "").strip().lower() in ("not specified", "not specified.", "")
+    )
+    if not_specified_count >= 4:
+        raise ValueError(
+            "The uploaded file does not appear to be a valid course syllabus. "
+            "Please upload a PDF or photo of your actual course syllabus."
+        )
+
     return extracted
 
 

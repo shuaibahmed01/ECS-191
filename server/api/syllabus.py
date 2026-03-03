@@ -58,6 +58,9 @@ def upload_syllabus(class_id):
     try:
         extracted = extract_syllabus(file_data, file_type, class_id, class_name)
         save_syllabus_context(class_id, g.user_id, extracted)
+    except ValueError as e:
+        # Validation error (e.g. file is not a real syllabus)
+        return jsonify({"error": str(e)}), 422
     except Exception as e:
         import traceback
         traceback.print_exc()

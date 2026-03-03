@@ -171,6 +171,26 @@ struct SyllabusUploadView: View {
             infoSection(title: "Grading Policy", field: "grading_policy", icon: "chart.bar.fill", color: .orange, content: context.gradingPolicy)
             infoSection(title: "Important Dates", field: "important_dates", icon: "calendar", color: .red, content: context.importantDates)
             infoSection(title: "Course Policies", field: "course_policies", icon: "list.clipboard.fill", color: .purple, content: context.coursePolicies)
+
+            Section {
+                Button {
+                    showDocumentPicker = true
+                } label: {
+                    Label("Upload New Syllabus (PDF)", systemImage: "arrow.triangle.2.circlepath")
+                        .frame(maxWidth: .infinity, alignment: .center)
+                }
+
+                Button {
+                    showCamera = true
+                } label: {
+                    Label("Retake Syllabus Photo", systemImage: "camera.fill")
+                        .frame(maxWidth: .infinity, alignment: .center)
+                }
+            } header: {
+                Text("Wrong syllabus?")
+            } footer: {
+                Text("Re-upload if the wrong document was processed.")
+            }
         }
     }
 

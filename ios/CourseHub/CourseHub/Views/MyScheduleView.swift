@@ -75,7 +75,13 @@ struct MyScheduleView: View {
                     .padding(.bottom, 16)
                 }
             }
-            .navigationTitle(greeting)
+            .navigationTitle("My Schedule")
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    Text(greeting)
+                        .font(.headline)
+                }
+            }
             .sheet(isPresented: $showingAddClass) {
                 ClassListView(
                     enrolledClassIds: Set(viewModel.enrolledClasses.map { $0.id }),

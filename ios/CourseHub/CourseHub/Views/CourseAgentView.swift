@@ -42,6 +42,20 @@ struct CourseAgentView: View {
 
             Divider()
 
+            // Persistent suggestion buttons (visible when messages exist)
+            if !viewModel.messages.isEmpty && !viewModel.isSending {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) {
+                        suggestionButton("When is the midterm?")
+                        suggestionButton("What's the grading breakdown?")
+                        suggestionButton("Office hours?")
+                        suggestionButton("Course policies?")
+                    }
+                    .padding(.horizontal)
+                    .padding(.vertical, 8)
+                }
+            }
+
             // Message input
             HStack(spacing: 12) {
                 TextField("Ask about your course...", text: $viewModel.messageText)

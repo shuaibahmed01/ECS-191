@@ -62,9 +62,28 @@
 - They appreciated the class groupchat feature. They ran into a problem last week where they were trying to get into a class discord that they forgot to join, but the invite link sent through Canvas inbox had long expired. With our app, the groupchat is always available to students in the related class.
 
 
+## Phase 1 Changes
+
+Based on the feedback above, we made the following changes:
+
+1. **Fixed "Hi [User Name]" back button** (User #2) — Changed the navigation title of MyScheduleView to "My Schedule" so child views show a proper back button label. The personalized greeting is now displayed as a toolbar header instead.
+
+2. **Persistent suggestion buttons in Course Agent** (User #1) — Suggestion buttons (e.g. "When is the midterm?", "Office hours?") now remain visible in a horizontally scrollable bar above the text input even after the user has sent messages, rather than disappearing after the first question.
+
+3. **Welcoming empty state for group chat** (User #1) — When a class groupchat has no messages yet, a friendly welcome screen is shown with the class code, an explanation of the chat's purpose, and a "Be the first to send a message!" prompt to make it less daunting to start.
+
+4. **Validation for non-syllabus file uploads** (User #2) — The backend now checks whether the uploaded file is actually a syllabus after AI extraction. If 4+ out of 5 fields come back as "Not specified", the server returns a 422 error with a helpful message ("The uploaded file does not appear to be a valid course syllabus") instead of a generic 500 error.
+
+5. **Visible "Re-upload Syllabus" button** (User #2) — Added a "Wrong syllabus?" section at the bottom of the syllabus detail view with clear "Upload New Syllabus (PDF)" and "Retake Syllabus Photo" buttons, so users don't have to discover the small toolbar menu icon.
+
 ## Phase 2
+
 ### User # 4
+
+
 ### User # 5
+
+
 ### User # 6
 
 ## Phase 3

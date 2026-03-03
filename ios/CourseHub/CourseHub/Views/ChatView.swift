@@ -14,16 +14,40 @@ struct ChatView: View {
             // Messages list
             ScrollViewReader { proxy in
                 ScrollView {
-                    LazyVStack(spacing: 12) {
-                        ForEach(viewModel.messages) { message in
-                            MessageBubble(
-                                message: message,
-                                isCurrentUser: viewModel.isCurrentUser(message: message)
-                            )
-                            .id(message.id)
+                    if viewModel.messages.isEmpty && !viewModel.isLoading {
+                        VStack(spacing: 16) {
+                            Spacer().frame(height: 60)
+
+                            Image(systemName: "bubble.left.and.bubble.right.fill")
+                                .font(.system(size: 48))
+                                .foregroundStyle(.blue)
+
+                            Text("Welcome to \(classCode)!")
+                                .font(.title3.bold())
+
+                            Text("This is the group chat for your class. Say hi to your classmates, ask questions, or share resources.")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                                .multilineTextAlignment(.center)
+                                .padding(.horizontal, 32)
+
+                            Text("Be the first to send a message!")
+                                .font(.caption)
+                                .foregroundStyle(.tertiary)
                         }
+                        .frame(maxWidth: .infinity)
+                    } else {
+                        LazyVStack(spacing: 12) {
+                            ForEach(viewModel.messages) { message in
+                                MessageBubble(
+                                    message: message,
+                                    isCurrentUser: viewModel.isCurrentUser(message: message)
+                                )
+                                .id(message.id)
+                            }
+                        }
+                        .padding()
                     }
-                    .padding()
                 }
                 .onChange(of: viewModel.messages.count) {
                     if let lastMessage = viewModel.messages.last {
