@@ -1,16 +1,13 @@
-"""Uploads API for chat/media attachments."""
+"""Uploads API for chat/media attachments using Firebase Storage."""
 
-import os
 import base64
 import uuid
-from flask import Blueprint, jsonify, request, send_from_directory
+from datetime import timedelta
+from flask import Blueprint, jsonify, request
+from firebase_admin import storage
 from services.auth_service import require_auth
 
 uploads_bp = Blueprint("uploads", __name__)
-
-UPLOAD_DIR = os.path.join(os.path.dirname(__file__), "..", "uploads")
-UPLOAD_DIR = os.path.abspath(UPLOAD_DIR)
-os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 ALLOWED_TYPES = {
     "image/jpeg": ".jpg",
@@ -24,7 +21,8 @@ ALLOWED_TYPES = {
 @require_auth
 def upload_file():
     """
-    Accept a base64-encoded file and return a public URL served by the backend.
+    Accept a base64-encoded file, upload to Firebase Storage,
+    and return a public URL.
     Body:
       - file_data: base64 string
       - file_type: MIME string (must be in ALLOWED_TYPES)
@@ -45,17 +43,13 @@ def upload_file():
         return jsonify({"error": "Invalid base64 file_data"}), 400
 
     ext = ALLOWED_TYPES[file_type]
-    filename = f"{uuid.uuid4().hex}{ext}"
-    filepath = os.path.join(UPLOAD_DIR, filename)
-    with open(filepath, "wb") as f:
-        f.write(file_bytes)
+    filename = f"chat_attachments/{uuid.uuid4().hex}{ext}"
 
-    # Served via GET /v1/uploads/<filename>
-    return jsonify({"url": f"/v1/uploads/{filename}", "type": file_type}), 201
+    bucket = storage.bucket()
+    blob = bucket.blob(filename)
+    blob.upload_from_string(file_bytes, content_type=file_type)
 
+    # Generate a signed URL that lasts 7 days
+    url = blob.generate_signed_url(expiration=timedelta(days=7))
 
-@uploads_bp.route("/uploads/<path:filename>", methods=["GET"])
-def serve_upload(filename: str):
-    """Serve an uploaded file."""
-    return send_from_directory(UPLOAD_DIR, filename, as_attachment=False)
-
+    return jsonify({"url": url, "type": file_type}), 201

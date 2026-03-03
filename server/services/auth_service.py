@@ -12,14 +12,21 @@ def init_firebase():
     if not firebase_admin._apps:
         # For local development, use default credentials or service account
         # In production on GCP, this will use the default service account
+        bucket = os.environ.get(
+            'FIREBASE_STORAGE_BUCKET',
+            'coursehub-c99c6.firebasestorage.app',
+        )
         try:
             # Try to use application default credentials (works on GCP)
-            firebase_admin.initialize_app()
+            firebase_admin.initialize_app(options={
+                'storageBucket': bucket,
+            })
         except Exception:
             # For local development without credentials, initialize without verification
             # Note: In production, you should always have proper credentials
             firebase_admin.initialize_app(options={
-                'projectId': os.environ.get('FIREBASE_PROJECT_ID', 'coursehub-dev')
+                'projectId': os.environ.get('FIREBASE_PROJECT_ID', 'coursehub-dev'),
+                'storageBucket': bucket,
             })
 
 
