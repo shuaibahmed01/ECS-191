@@ -80,11 +80,57 @@ Based on the feedback above, we made the following changes:
 
 ### User # 4
 
+1. What do you think this app does
+
+You put your class schedule and it basically serves as a syllabus reader. It tells you all the information from the syllabus.  
+
+2. Do you trust the AI results? (after having them complete their AI-related task)
+
+Yeah I do.
+
+3. How easy was this? How would you explain this to someone else using one sentence?
+   
+Very easy, you just have to upload your syllabus.
+
+4. Other Notes:
+
+He didn't notice the class group chat feature that much. He said he would use it because right now he has to keep checking his phone. He says its for people who arent very on top of their scheduling but because he always puts the information in google calendar he doesn't need it that much.
 
 ### User # 5
 
+1. What do you think this app does
+
+It looks like a sort of smart canvas. It can summarize and the AI aspect is useful because it can get you quick access to the course and can get you quick information. It's meant to use your canvas and meant for it to be more user friendly/
+
+2. Do you trust the AI results? (after having them complete their AI-related task)
+
+I do because the developers are trustworthy.
+
+3. How easy was this? How would you explain this to someone else using one sentence?
+   
+Imagine canvas but a lot easier. It was very easy.
+
+4. Other Notes:
+
+There's no way to remove classes. I misclicked on one and now you can't remove it.
 
 ### User # 6
+
+1. What do you think this app does
+
+It's a canvas extension that uses AI to make the workload easier for students.
+
+2. Do you trust the AI results? (after having them complete their AI-related task)
+
+For specific stuff like dates I would, but I'd also double check. For general questions like when I asked about the AI policy I'd prefer to read it myself to see if there are any like exceptions or specific wordinh.
+
+3. How easy was this? How would you explain this to someone else using one sentence?
+   
+It was easy because the material is sort of just hard coded. I'd describe it as a canvas app that simplifies the student workflow.
+
+4. Other Notes:
+
+I'm taking non-cs classes that aren't in there so if there was maybe a way that I could add my own class it would be helpful? Or some way to get my MGT courses. Otherwise, it's pretty decent but I wouldn't end up using it that much because I'm a graduating senior and used to the canvas flow.
 
 ## Phase 3
 ### User # 7
