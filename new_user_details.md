@@ -144,5 +144,61 @@ Based on the feedback above, we made the following changes:
 
 ## Phase 3
 ### User # 7
+1. What do you think this app does?
+
+- "It’s like a smarter Canvas companion that pulls important info from my syllabus, lets me chat with classmates, and keeps everything for each class in one place."
+- Accurate. They immediately recognized the syllabus + AI + class hub concept.
+  
+2. Do you trust the AI results? (after having them complete their AI-related task)
+
+- "For dates and policies, yes if I can see where it came from. I want a link or highlight to the exact line in the syllabus."
+- Trust improves with transparent citations and quick access to the original source.
+
+3. How easy was this? How would you explain this to someone else using one sentence?
+   
+- "Very easy. Upload a syllabus and get the key details and a place to talk to your class."
+- One-sentence: "A one-stop hub that extracts class info for you and keeps your class organized."
+
+4. Other Notes:
+
+- Wants AI answers to show inline citations with jump-to-syllabus context (tap-to-highlight).
+
 ### User # 8
+1. What do you think this app does?
+
+- "Group chat plus quick facts about my course from files. Feels like a shared space for the class that’s simpler than Discord."
+- Accurate, and they framed it as a lightweight alternative to external tools.
+
+2. Do you trust the AI results? (after having them complete their AI-related task)
+
+- "I trust it for quick lookups, but I need to verify for anything I post to my group. File links and previews would help."
+- Trust increases if answers are verifiable and rich previews reduce friction.
+
+3. How easy was this? How would you explain this to someone else using one sentence?
+   
+- "Easy to get started and add classes."
+- One-sentence: "A simpler class home with chat and fast answers from your materials."
+
+4. Other Notes:
+
+- Wants file/image attachments in class chat with link previews.
+
 ### User # 9
+1. What do you think this app does?
+
+- "Centralizes course info and lets me query it; could replace bouncing between Canvas, email, and Drive."
+- Accurate; sees it as a workflow consolidator.
+
+2. Do you trust the AI results? (after having them complete their AI-related task)
+
+- "Trust is good if I can search globally and see sources; I’d like a confidence hint or 'verify against source' button."
+- Trust hinges on discoverability of sources and global search coverage.
+
+3. How easy was this? How would you explain this to someone else using one sentence?
+   
+- "Straightforward, but I want power features."
+- One-sentence: "Your classes, chats, and extracted facts, all searchable in one app."
+
+4. Other Notes:
+
+- Global search across classes, chat, and syllabus with filters.
