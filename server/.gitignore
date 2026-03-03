@@ -16,5 +16,6 @@ __pycache__/
 firebase-credentials.json
 
 .env
+env_variables.yaml
 
 scripts/courses.csv
