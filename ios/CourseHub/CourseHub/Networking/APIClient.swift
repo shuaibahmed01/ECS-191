@@ -49,7 +49,7 @@ struct MessageListResponse: Codable {
 class APIClient {
     static let shared = APIClient()
 
-    private let baseURL = "http://localhost:5001/v1"
+    private let baseURL = "https://coursehub-c99c6.uc.r.appspot.com/v1"
 
     private init() {}
 
