@@ -116,4 +116,46 @@ Status Quo (Inertia)
 
 ### User Experience 9
 
+Push (Pain)
+
+- showed up to office hours and didn't know where it was because the professor just mentioned it in week 1
+- ended up going home because there were 9 floors on that hall so they couldn't find it
+- syllabus was for some reason buried in the canvas files
+
+Pull (Promise)
+
+- liked that the AI syllabus could do that for him
+- dont have to dig through canvas
+
+Friction (Anxiety)
+
+- what if the professor changes the schedule halfway through the quarter
+- additional office hours wont be on it
+
+Status Quo (Inertia)
+
+- just texting a friend is easy if they actually respond
+- coursehub would need fast responses by having people ready to respond
+
 ### User Experience 10
+
+Push (Pain)
+
+- assignment due and his group mate was on an android that just broke the imessage gc, wouldn't send message
+- couldnt read any of his messages the night before the assignment was due
+
+Pull (Promise)
+
+- in app group chat per class made sense for them in this case
+- they liked how it was scoped to only be for that class and not just a general gc
+- people keep sending dumb memes in discord servers that clogs it
+
+Friction (Anxiety)
+
+- you have to get everyone to use it which is another big ask
+- dont want to be the only one on the app asking everyone to download vs apps everyone has
+
+Status Quo (Inertia)
+
+- discord isn't going anywhere and creating a public server is easy
+- doesnt just want another gc to get mixed up with the rest
