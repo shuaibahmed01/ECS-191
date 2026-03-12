@@ -111,8 +111,31 @@ Status Quo (Inertia)
 - said CourseHub would need Canvas integration and a calendar view with auto-populated deadlines to even be considered as a supplement, not a replacement
 
 ### User Experience 7
+Pain
+Asked them about the last time they had to dig for course info. They said finding stuff like grading breakdowns or office hours on Canvas is annoying, but they've basically already solved that problem on their own. They just paste their syllabi into ChatGPT and ask questions there. So the pain is real but they already have a workaround they're comfortable with.
+
+Promise
+When they first opened CourseHub they were hoping the AI agent would be smarter than manually prompting ChatGPT. But after trying it they basically said they can already do the same thing in ChatGPT by uploading documents and asking whatever they want. They wondered what CourseHub does that ChatGPT doesn't. They acknowledged the all in one aspect with chat and AI and syllabus together but didn't think that alone was enough reason to switch.
+
+Anxiety
+Wasn't really worried about accuracy. More that the AI felt limited compared to what they're used to with ChatGPT. They trust ChatGPT more because they've used it so much and can control prompts more precisely. Also brought up that not all professors upload slides, and when they do the slides are often just sparse bullet points with no real context. The real content comes from what the professor actually says in lecture, so AI flashcards based on sparse slides aren't that useful or relevant to them.
+
+Inertia
+Said they'd rather just juggle ChatGPT and Discord and Canvas separately. Yeah it's more apps but they know them and trust them. The group chat in CourseHub had nobody in it and all their friends are already on Discord. They'd need everyone to switch and that's just not going to happen. Said the extra time switching between apps is worth it for confidence in accuracy and for having group chats that are actually active.
+
 
 ### User Experience 8
+Pain
+Said they always forget office hours. often have to go back to the syllabus to check. Same with other small things like grading breakdown and late policy. They know it's in the syllabus somewhere but finding it each time is annoying. Also said Canvas navigation is confusing because sometimes the syllabus is a page, other times it's a PDF, and the location isn't always the same across classes.
+
+Promise
+When they opened the app they just wanted to find info quickly without digging through Canvas every time. Just tell me when office hours are, that kind of thing. Said the course AI agent actually did a good job at that. They asked about office hours, grading, and late policy and got answers right away with citations from the syllabus.
+
+Anxiety
+Trust in the AI was actually pretty high for syllabus-based questions. The citations helped a lot. Main concern was about classes where the syllabus isn't in a nice PDF or doc format they can easily upload or download. For classes where the syllabus is just a Canvas page, they can't easily get that into the app. Said it's not worth the headache to create a PDF manually for those classes and they'd rather just deal with scrolling through Canvas for those.
+
+Inertia
+For classes where they uploaded the syllabus, they thought  CourseHub was useful. But for their other classes where the syllabus was a Canvas page, they just went back to Canvas since it wasn't worth the effort to convert to pdf or doc and upload. On group chat, said there were no other users in their class chats so that feature was completely useless. On flashcards, said the AI flashcards are a cool concept but about half the cards it generated were irrelevant to what they actually need to prep for on exams and homework. Would make cards about stuff that won't even be tested.
 
 ### User Experience 9
 
