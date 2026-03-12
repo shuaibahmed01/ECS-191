@@ -44,11 +44,71 @@ Status Quo (Inertia)
 
 ### User Experience 3 (I have this I just need to write it down - Afifah)
 
-### User Experience 4 
+### User Experience 4
+
+Push (Pain)
+- biggest frustration was that the app doesn't connect to Canvas at all
+- had to manually add classes and upload their own syllabus, which they already have on Canvas
+- felt they were "basically doing double the work", they had already set up their schedule on Canvas and Google Calendar, and now had to do it again in the app
+- group chat was empty because nobody else was using it, so there was no point in checking it
+
+Pull (Promise)
+- liked the concept of having everything in one place: group chat, syllabus, agent all under one class
+- said the group chat idea actually solves a real problem for them (expired Discord links from Canvas inbox)
+- UI was clean and intuitive, didn't need any help navigating
+
+Friction (Anxiety)
+- wasn't anxious about the app itself, more skeptical about whether enough people would ever use it for the group chat to be useful
+- "nobody uses it because nobody's on it", this becomes a chicken and egg problem
+
+Status Quo (Inertia)
+- already has a working Canvas + Discord + Google Calendar setup
+- said switching cost is high because CourseHub doesn't import anything from existing tools
+- "it would have to do everything Canvas does plus more. Right now it does less than Canvas but in a nicer UI."
 
 ### User Experience 5
 
+Push (Pain)
+- went to browse classes and it was all CS courses, ECS 36A, ECS 150, etc.
+- they're a biochem major and didn't see many classes for them
+- searched for BIS 101 and CHE 118A but nothing came up
+- "I could only add one out of my four classes so the app was basically useless for most of my schedule"
+
+Pull (Promise)
+- was excited about the syllabus agent feature because they hate reading long syllabi
+- felt that it could be huge for them because bio classes have super long and lengthy syllabi
+
+Friction (Anxiety)
+- was a little unsure about signing in with their UC Davis email, "what are they doing with my data?"
+- also wasn't clear whether the syllabus they uploaded would be visible to other students or just them
+- would have liked some kind of privacy explanation or settings
+
+Status Quo (Inertia)
+- no compelling reason to switch from Canvas when the app only covers 25% of their classes
+- friends aren't on it so group chat has no value
+- "the concept is good but it needs to have all departments, not just CS. Even then I'd need a reason to open this instead of Canvas"
+
 ### User Experience 6
+
+Push (Pain)
+- said the Course Agent was useful at first for finding syllabus info quickly (late policy, exam dates) but hit a wall fast
+- "it can only know what's in the syllabus. If the prof doesn't put it there, the agent can't help"
+- slides upload felt pointless, professor already posts slides on Canvas, so re-uploading them here is extra work for no reason
+- group chat was dead
+
+Pull (Promise)
+- syllabus auto-extraction was genuinely useful, saved them from scrolling through a 9-page PDF at the start of the quarter
+- liked having office hours and exam dates pulled out automatically
+- said the Course Agent was the strongest feature by far
+
+Friction (Anxiety)
+- wasn't sure what content was shared vs private, could other students see their uploaded syllabus or slides?
+- would have liked a loading indicator or some feedback
+
+Status Quo (Inertia)
+- has a personal Notion system they've built over 2 years with deadlines, assignments, notes, lecture recording links
+- "I'm not going to throw that away for an app that might not be around next quarter"
+- said CourseHub would need Canvas integration and a calendar view with auto-populated deadlines to even be considered as a supplement, not a replacement
 
 ### User Experience 7
 
