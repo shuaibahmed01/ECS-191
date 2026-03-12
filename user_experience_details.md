@@ -42,7 +42,29 @@ Status Quo (Inertia)
 - already bombarded with so much software, and this would be another thing you need to download
 - said it would be better as an extension integrated into software we already use
 
-### User Experience 3 (I have this I just need to write it down - Afifah)
+### User Experience 3 
+### Push (Pain)
+- sometimes forgets where specific information is in the syllabus and has to **scroll through a long PDF to find one small detail**
+- important policies or deadlines can be buried in the syllabus, so they don’t notice them until later
+- Canvas doesn’t always make important class logistics easy to see quickly**
+- feels like every class structures their Canvas page differently, so it can be confusing to find things
+
+### Pull (Promise)
+- wanted something that could quickly answer questions about the syllabus
+- liked the idea of not having to read the whole syllabus to find one thing
+- thought it could be useful if it pulled out deadlines, policies, and schedules automatically
+- interested in something that centralizes course information instead of clicking through multiple Canvas tabs
+
+### Friction (Anxiety)
+- worried the AI might summarize something incorrectly or miss context
+- concerned that the AI might give confident answers that aren’t actually correct
+- unsure how well the system works if the syllabus format changes between classes
+
+### Status Quo (Inertia)
+- usually just command + F’s the syllabus PDF
+- relies on Canvas announcements, calendar, and the syllabus page
+- doesn’t want to learn another tool during the middle of the quarter
+- said they would be more likely to try it if professors or other students (non-developer) recommended it
 
 ### User Experience 4
 
