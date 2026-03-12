@@ -7,9 +7,7 @@ Overall, the problems we’re targeting are real, but switching behavior is much
 
 ## What people liked
 
-The **Course Agent / syllabus AI** was consistently the strongest feature.
-
-Multiple users said it was helpful to quickly answer questions like office hours, exam dates, grading breakdowns, or late policies without scrolling through a long syllabus PDF.
+The **Course Agent / syllabus AI** was consistently the strongest feature. Multiple users said it was helpful to quickly answer questions like office hours, exam dates, grading breakdowns, or late policies without scrolling through a long syllabus PDF.
 
 Some specific examples:
 
@@ -17,9 +15,7 @@ Some specific examples:
 - Another user said the agent saved them from scrolling through a **9 page syllabus** and immediately pulled out exam dates and office hours.
 - Several users liked that the AI answers included **citations from the syllabus**, which increased trust.
 
-In general, the value proposition that resonated most was: “I can just ask a question instead of digging through Canvas or a syllabus PDF.”
-
-The **all-in-one idea** also resonated conceptually. Some users liked the idea of having:
+In general, the value proposition that resonated most was: “I can just ask a question instead of digging through Canvas or a syllabus PDF.” The **all-in-one idea** also resonated conceptually. Some users liked the idea of having:
 
 - syllabus
 - class chat
@@ -28,13 +24,13 @@ The **all-in-one idea** also resonated conceptually. Some users liked the idea o
 
 all inside a single class space.
 
-One user described it as feeling like a combination of **Discord + calendar + ChatGPT**, which they thought was more organized than Canvas.
-
-Another user liked the class-scoped group chat idea because their iMessage group broke the night before an assignment due date and Discord servers sometimes get cluttered with unrelated messages.
+One user described it as feeling like a combination of **Discord + calendar + ChatGPT**, which they thought was more organized than Canvas. Another user liked the class-scoped group chat idea because their iMessage group broke the night before an assignment due date and Discord servers sometimes get cluttered with unrelated messages.
 
 ## What didn’t work well
 
-The biggest issue was **switching cost**. Most students already have a working system that looks something like: Canvas + Discord + ChatGPT + Google Calendar + personal notes system. Because of that, CourseHub often felt like **an extra step rather than a replacement**.
+### Switching Costs
+
+Most students already have a working system that looks something like: Canvas + Discord + ChatGPT + Google Calendar + personal notes system. Because of that, CourseHub often felt like **an extra step rather than a replacement**.
 
 Examples:
 
@@ -50,7 +46,7 @@ A second major issue was **manual setup friction**. Several users disliked that 
 
 especially when that information already exists in Canvas. One person described it as: “basically doing double the work” since they already set up their schedule in Canvas and Google Calendar. Another user said it felt pointless to upload slides when professors already post them on Canvas.
 
-## Network effects were a real problem
+### Network effects 
 
 The **group chat feature had almost no value** for most users because nobody else was on the app. Multiple interviews mentioned this directly:
 
@@ -60,11 +56,11 @@ The **group chat feature had almost no value** for most users because nobody els
 
 One user described it as a classic **chicken and egg problem**. Another said the chat idea solves a real issue (expired Discord links from Canvas inbox), but it only works if the whole class is using it.
 
-## Coverage problems
+### Coverage problems
 
 One interview revealed a major usability gap. The student was a **biochemistry major** and almost all the classes in the app were CS courses. They could only add **1 out of their 4 classes**, which made the app basically unusable for them. Their reaction was: “the concept is good but it needs to have all departments” Without broad class coverage, the value of the product drops quickly.
 
-## Trust and AI concerns
+### Trust and AI concerns
 
 Accuracy anxiety wasn’t the main issue. Students generally trusted the AI **when it clearly cited the syllabus**. However, several concerns came up:
 
@@ -73,11 +69,9 @@ Accuracy anxiety wasn’t the main issue. Students generally trusted the AI **wh
 - what if the syllabus format changes
 - uncertainty about what data is shared vs private
 
-Some users also mentioned privacy concerns when signing in with their UC Davis email or uploading syllabi.
+Some users also mentioned privacy concerns when signing in with their UC Davis email or uploading syllabi. Another interesting pattern was **ChatGPT comparison**. Students who already use ChatGPT heavily felt our agent was **less flexible** than prompting ChatGPT directly.
 
-Another interesting pattern was **ChatGPT comparison**. Students who already use ChatGPT heavily felt our agent was **less flexible** than prompting ChatGPT directly.
-
-## Canvas is the real competitor
+### Canvas is the real competitor
 
 Nearly every interview referenced Canvas. The most common feedback was that the app would be **much more compelling as a Canvas extension** rather than a standalone platform. Reasons included:
 
