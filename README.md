@@ -1,27 +1,33 @@
 # CourseHub
 
-A mobile app for UC Davis students to manage their class schedules and communicate with classmates. Students can browse courses, add them to their schedule, and chat with others in each class.
+A mobile app for UC Davis students to manage their class schedules and communicate with classmates. Students can browse courses, add them to their schedule, chat with others in each class, and study smarter with AI-powered tools.
 
-## Features 
+## Features
 
 - **Authentication**: Sign up and sign in with email/password
 - **Browse Classes**: View all available UC Davis CS courses for the current quarter
 - **Search**: Filter classes by course code or name
 - **Add to Schedule**: Enroll in classes with a single tap
 - **My Schedule**: View all enrolled classes in one place
-- **Class Group Chat**: Chat with classmates in each enrolled class
+- **Class Group Chat**: Chat with classmates in each enrolled class, with support for image and PDF attachments
 - **Remove Classes**: Swipe to remove classes from your schedule
 - **Syllabus Upload**: Upload a PDF or photo of your syllabus; AI extracts instructor, grading, dates, and policies
-- **Course Agent**: Chat with an AI assistant that answers questions using your syllabus as context
+- **Syllabus Editing**: Edit extracted syllabus fields (instructor, office hours, grading policy, dates, policies) after upload
+- **Lecture Slides**: Upload lecture slides (PDF or photo); AI summarizes key concepts, definitions, formulas, and examples
+- **Flashcard Generation**: Auto-generate study flashcards from lecture slide summaries with an interactive flip-and-swipe study interface
+- **Course Agent**: Chat with an AI assistant that answers questions using your syllabus and lecture slides as context, with citation support
+- **Global Search**: Search across all enrolled classes — syllabus content and chat messages — from a single search bar
+- **File Attachments**: Upload images and PDFs in chat via Firebase Storage with signed URLs
 
 ## Tech Stack
 
 - **Frontend**: SwiftUI (iOS 17+)
 - **Backend**: Flask (Python 3.12)
 - **Authentication**: Firebase Authentication
-- **Database**: Firestore (courses, users, enrollments, and chat messages)
+- **Database**: Firestore (courses, users, enrollments, chat messages, slides, and flashcards)
+- **Storage**: Firebase Storage (chat attachments, slide uploads)
 - **Real-Time Chat**: Firestore snapshot listeners (iOS reads directly from Firestore)
-- **AI**: Anthropic Claude API (syllabus extraction and course agent)
+- **AI**: Anthropic Claude API — claude-sonnet-4-20250514 (syllabus extraction, slide summarization, flashcard generation, and course agent)
 
 ## Getting Started
 
@@ -118,8 +124,16 @@ All protected endpoints require header: `Authorization: Bearer <firebase_id_toke
 | POST | `/v1/classes/<id>/messages` | Send chat message |
 | POST | `/v1/classes/<id>/syllabus` | Upload & process syllabus |
 | GET | `/v1/classes/<id>/syllabus` | Get extracted syllabus context |
+| PUT | `/v1/classes/<id>/syllabus` | Update syllabus fields |
+| POST | `/v1/classes/<id>/slides` | Upload & process lecture slides |
+| GET | `/v1/classes/<id>/slides` | List slide summaries |
+| DELETE | `/v1/classes/<id>/slides/<slide_id>` | Delete a slide entry |
+| POST | `/v1/classes/<id>/slides/<slide_id>/flashcards` | Generate flashcards from slide |
+| GET | `/v1/classes/<id>/slides/<slide_id>/flashcards` | Get generated flashcards |
 | POST | `/v1/classes/<id>/agent/chat` | Send message to course agent |
 | GET | `/v1/classes/<id>/agent/history` | Get agent chat history |
+| POST | `/v1/uploads` | Upload file to Firebase Storage |
+| GET | `/v1/search?q=<query>&types=<types>` | Search across enrolled classes |
 
 ## Project Structure
 
@@ -129,11 +143,13 @@ All protected endpoints require header: `Authorization: Bearer <firebase_id_toke
 │   │   ├── classes.py          # Class listing endpoints
 │   │   ├── users.py            # User & enrollment endpoints
 │   │   ├── chat.py             # Chat endpoints
-│   │   └── syllabus.py         # Syllabus & course agent endpoints
+│   │   ├── syllabus.py         # Syllabus, slides, flashcards & course agent endpoints
+│   │   ├── uploads.py          # File upload to Firebase Storage
+│   │   └── search.py           # Global search across classes
 │   ├── services/
 │   │   ├── datastore_service.py  # Data layer
 │   │   ├── auth_service.py       # Firebase token verification
-│   │   └── syllabus_service.py   # Anthropic API & syllabus Firestore CRUD
+│   │   └── syllabus_service.py   # Anthropic API, syllabus, slides & flashcard logic
 │   ├── main.py
 │   ├── .env                     # Environment variables (not committed)
 │   ├── tests/                   # Pytest test suite
@@ -141,9 +157,9 @@ All protected endpoints require header: `Authorization: Bearer <firebase_id_toke
 │
 └── ios/CourseHub/
     └── CourseHub/
-        ├── Models/             # Data models
-        ├── ViewModels/         # Business logic (incl. AuthViewModel)
-        ├── Views/              # SwiftUI views (incl. LoginView)
+        ├── Models/             # Data models (incl. SlideEntry, Flashcard)
+        ├── ViewModels/         # Business logic (incl. SlidesViewModel)
+        ├── Views/              # SwiftUI views (incl. SlidesView, FlashcardStudyView, GlobalSearchView)
         └── Networking/         # API client
 ```
 
