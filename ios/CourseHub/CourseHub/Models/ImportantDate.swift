@@ -15,8 +15,19 @@ struct ImportantDate: Codable, Identifiable {
         return formatter
     }()
 
+    static let dateTimeFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd HH:mm"
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        return formatter
+    }()
+
     var parsedDate: Date? {
-        Self.dateFormatter.date(from: date)
+        Self.dateTimeFormatter.date(from: date) ?? Self.dateFormatter.date(from: date)
+    }
+
+    static func parseDate(_ string: String) -> Date? {
+        dateTimeFormatter.date(from: string) ?? dateFormatter.date(from: string)
     }
 
     enum CodingKeys: String, CodingKey {

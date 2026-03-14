@@ -39,7 +39,7 @@ class RemindersViewModel {
 
     func effectiveParsedDate(for date: ImportantDate) -> Date? {
         let dateString = effectiveDateString(for: date)
-        return ImportantDate.dateFormatter.date(from: dateString)
+        return ImportantDate.parseDate(dateString)
     }
 
     @MainActor
@@ -106,7 +106,7 @@ class RemindersViewModel {
 
     @MainActor
     func updateEventDate(for date: ImportantDate, newDate: Date) {
-        let dateString = ImportantDate.dateFormatter.string(from: newDate)
+        let dateString = ImportantDate.dateTimeFormatter.string(from: newDate)
         var pref = reminders[date.id] ?? ReminderPreference(
             dateId: date.id,
             classId: date.classId,

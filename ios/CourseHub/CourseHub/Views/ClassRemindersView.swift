@@ -67,7 +67,7 @@ struct ClassRemindersView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(date.title)
                         .font(.headline)
-                    Text(formattedDate(remindersVM.reminders[date.id]?.customDate ?? date.date))
+                    Text(formattedDateTime(remindersVM.effectiveDateString(for: date)))
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }
@@ -89,14 +89,14 @@ struct ClassRemindersView: View {
                 }
 
                 DatePicker(
-                    "Event Date",
+                    "Date & Time",
                     selection: Binding(
                         get: { remindersVM.effectiveParsedDate(for: date) ?? Date() },
                         set: { newDate in
                             remindersVM.updateEventDate(for: date, newDate: newDate)
                         }
                     ),
-                    displayedComponents: .date
+                    displayedComponents: [.date, .hourAndMinute]
                 )
                 .datePickerStyle(.compact)
 
@@ -127,10 +127,17 @@ struct ClassRemindersView: View {
         }
     }
 
-    private func formattedDate(_ dateString: String) -> String {
-        guard let date = ImportantDate.dateFormatter.date(from: dateString) else { return dateString }
-        let outFormatter = DateFormatter()
-        outFormatter.dateStyle = .medium
-        return outFormatter.string(from: date)
+    private func formattedDateTime(_ dateString: String) -> String {
+        guard let date = ImportantDate.parseDate(dateString) else { return dateString }
+        let formatter = DateFormatter()
+        // If the string has time info (custom date), show date + time
+        if dateString.contains(" ") {
+            formatter.dateStyle = .medium
+            formatter.timeStyle = .short
+        } else {
+            formatter.dateStyle = .medium
+            formatter.timeStyle = .none
+        }
+        return formatter.string(from: date)
     }
 }

@@ -70,7 +70,7 @@ struct UpcomingDatesView: View {
                             .background(Color.blue.opacity(0.12))
                             .foregroundStyle(.blue)
                             .clipShape(Capsule())
-                        Text(formattedDate(viewModel.effectiveDateString(for: date)))
+                        Text(formattedDateTime(viewModel.effectiveDateString(for: date)))
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                     }
@@ -92,9 +92,8 @@ struct UpcomingDatesView: View {
                         .foregroundStyle(.secondary)
                 }
 
-                // Event date picker
                 DatePicker(
-                    "Event Date",
+                    "Date & Time",
                     selection: Binding(
                         get: {
                             viewModel.effectiveParsedDate(for: date) ?? Date()
@@ -103,11 +102,10 @@ struct UpcomingDatesView: View {
                             viewModel.updateEventDate(for: date, newDate: newDate)
                         }
                     ),
-                    displayedComponents: .date
+                    displayedComponents: [.date, .hourAndMinute]
                 )
                 .datePickerStyle(.compact)
 
-                // Reminder time picker
                 VStack(alignment: .leading, spacing: 6) {
                     Text("Remind me")
                         .font(.subheadline)
@@ -135,11 +133,17 @@ struct UpcomingDatesView: View {
         }
     }
 
-    private func formattedDate(_ dateString: String) -> String {
-        guard let date = ImportantDate.dateFormatter.date(from: dateString) else { return dateString }
-        let outFormatter = DateFormatter()
-        outFormatter.dateStyle = .medium
-        return outFormatter.string(from: date)
+    private func formattedDateTime(_ dateString: String) -> String {
+        guard let date = ImportantDate.parseDate(dateString) else { return dateString }
+        let formatter = DateFormatter()
+        if dateString.contains(" ") {
+            formatter.dateStyle = .medium
+            formatter.timeStyle = .short
+        } else {
+            formatter.dateStyle = .medium
+            formatter.timeStyle = .none
+        }
+        return formatter.string(from: date)
     }
 }
 
