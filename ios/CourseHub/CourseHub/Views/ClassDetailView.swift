@@ -6,8 +6,6 @@ struct ClassDetailView: View {
     @State private var isRemoving = false
     @State private var showRemoveConfirm = false
     @State private var removeError: String?
-    @State private var syllabusVM: SyllabusUploadViewModel?
-    @State private var remindersVM = RemindersViewModel()
     @Environment(\.dismiss) private var dismiss
 
     private var lectureSummary: String? {
@@ -91,87 +89,17 @@ struct ClassDetailView: View {
                 }
             }
 
-            // Important Dates section
-            Section("Important Dates") {
-                if let vm = syllabusVM, let dates = vm.syllabusContext?.parsedDates, !dates.isEmpty {
-                    ForEach(Array(dates.enumerated()), id: \.offset) { idx, parsed in
-                        let dateId = "\(entry.id)_\(idx)"
-                        let importantDate = ImportantDate(
-                            id: dateId,
-                            classId: entry.id,
-                            classCode: entry.classCode,
-                            title: parsed.title,
-                            date: parsed.date,
-                            description: parsed.description
-                        )
-                        DisclosureGroup {
-                            VStack(alignment: .leading, spacing: 8) {
-                                if !parsed.description.isEmpty {
-                                    Text(parsed.description)
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-                                }
-                                DatePicker(
-                                    "Event Date",
-                                    selection: Binding(
-                                        get: {
-                                            remindersVM.effectiveParsedDate(for: importantDate) ?? Date()
-                                        },
-                                        set: { newDate in
-                                            remindersVM.updateEventDate(for: importantDate, newDate: newDate)
-                                        }
-                                    ),
-                                    displayedComponents: .date
-                                )
-                                .datePickerStyle(.compact)
-                                .font(.subheadline)
-
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text("Remind me")
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-                                    Picker("", selection: Binding(
-                                        get: { remindersVM.reminders[dateId]?.reminderTime ?? .dayBefore },
-                                        set: { newTime in
-                                            remindersVM.updateReminderTime(for: importantDate, time: newTime)
-                                        }
-                                    )) {
-                                        ForEach(ReminderTime.allCases, id: \.self) { time in
-                                            Text(time.displayName).tag(time)
-                                        }
-                                    }
-                                    .pickerStyle(.segmented)
-                                }
-                            }
-                        } label: {
-                            HStack {
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(parsed.title)
-                                        .font(.subheadline)
-                                        .fontWeight(.medium)
-                                    Text(formattedDate(remindersVM.reminders[dateId]?.customDate ?? parsed.date))
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-                                }
-                                Spacer()
-                                Toggle("", isOn: Binding(
-                                    get: { remindersVM.reminders[dateId]?.reminderEnabled ?? false },
-                                    set: { _ in
-                                        Task { await remindersVM.toggleReminder(for: importantDate) }
-                                    }
-                                ))
-                                .labelsHidden()
-                            }
-                        }
+            Section {
+                NavigationLink {
+                    ClassRemindersView(classId: entry.id, classCode: entry.classCode)
+                } label: {
+                    HStack(spacing: 12) {
+                        Image(systemName: "bell.fill")
+                            .font(.title2)
+                            .foregroundStyle(.red)
+                            .frame(width: 36)
+                        Text("Reminders")
                     }
-                } else if syllabusVM == nil || !((syllabusVM?.hasExistingSyllabus) ?? false) {
-                    Text("Upload a syllabus to see dates")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                } else {
-                    Text("No dates found in syllabus")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
                 }
             }
 
@@ -248,11 +176,7 @@ struct ClassDetailView: View {
                 .disabled(isRemoving)
             }
         }
-        .sheet(isPresented: $showSyllabusSheet, onDismiss: {
-            Task {
-                await syllabusVM?.loadExistingSyllabus()
-            }
-        }) {
+        .sheet(isPresented: $showSyllabusSheet) {
             SyllabusUploadView(classId: entry.id, classCode: entry.classCode)
         }
         .navigationTitle(entry.classCode)
@@ -261,22 +185,6 @@ struct ClassDetailView: View {
             Button("OK") { removeError = nil }
         } message: {
             Text(removeError ?? "")
-        }
-        .task {
-            let vm = SyllabusUploadViewModel(classId: entry.id)
-            syllabusVM = vm
-            await vm.loadExistingSyllabus()
-            remindersVM.reminders = ReminderStore.shared.loadAll()
-        }
-        .alert("Notifications Disabled", isPresented: $remindersVM.permissionDenied) {
-            Button("Open Settings") {
-                if let url = URL(string: UIApplication.openSettingsURLString) {
-                    UIApplication.shared.open(url)
-                }
-            }
-            Button("Cancel", role: .cancel) {}
-        } message: {
-            Text("Enable notifications in Settings to receive reminders.")
         }
         .confirmationDialog(
             "Remove \(entry.classCode) from your schedule?",
@@ -299,14 +207,6 @@ struct ClassDetailView: View {
         }
     }
 
-    private func formattedDate(_ dateString: String) -> String {
-        let inFormatter = DateFormatter()
-        inFormatter.dateFormat = "yyyy-MM-dd"
-        guard let date = inFormatter.date(from: dateString) else { return dateString }
-        let outFormatter = DateFormatter()
-        outFormatter.dateStyle = .medium
-        return outFormatter.string(from: date)
-    }
 }
 
 #Preview {
