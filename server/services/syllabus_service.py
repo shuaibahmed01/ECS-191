@@ -78,6 +78,7 @@ Return your response as a JSON object with these exact keys:
 - "important_dates": Key dates (midterms, finals, project deadlines, holidays)
 - "course_policies": Attendance, late work, academic integrity, and other policies
 - "raw_summary": A comprehensive plain-text summary of the entire syllabus
+- "parsed_dates": Array of objects with "title" (str), "date" (YYYY-MM-DD), "description" (str). Only include dates that can be resolved to a specific calendar date. If none, return [].
 
 If any field is not found in the syllabus, use "Not specified" as the value.
 Return ONLY the JSON object, no other text."""
@@ -142,6 +143,7 @@ def save_syllabus_context(class_id, user_id, extracted_data):
         "important_dates": extracted_data.get("important_dates", "Not specified"),
         "course_policies": extracted_data.get("course_policies", "Not specified"),
         "raw_summary": extracted_data.get("raw_summary", ""),
+        "parsed_dates": extracted_data.get("parsed_dates", []) if isinstance(extracted_data.get("parsed_dates"), list) else [],
         "uploaded_by": user_id,
         "uploaded_at": firestore.SERVER_TIMESTAMP,
     })

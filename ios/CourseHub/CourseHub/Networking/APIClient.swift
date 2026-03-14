@@ -252,6 +252,15 @@ class APIClient {
         )
     }
     
+    // MARK: - Important Dates
+
+    func fetchImportantDates() async throws -> [ImportantDate] {
+        let response: ImportantDatesResponse = try await request(
+            endpoint: "/users/me/important-dates"
+        )
+        return response.dates
+    }
+
     // MARK: - Classes (single)
     func fetchClass(classId: String) async throws -> CourseClass {
         return try await request(endpoint: "/classes/\(classId)", requiresAuth: false)

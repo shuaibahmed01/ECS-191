@@ -1,5 +1,11 @@
 import Foundation
 
+struct ParsedDate: Codable {
+    let title: String
+    let date: String
+    let description: String
+}
+
 struct SyllabusContext: Codable {
     let classId: String
     let instructor: String
@@ -10,6 +16,7 @@ struct SyllabusContext: Codable {
     let rawSummary: String
     let uploadedBy: String
     let uploadedAt: String
+    let parsedDates: [ParsedDate]?
 
     enum CodingKeys: String, CodingKey {
         case classId = "class_id"
@@ -21,6 +28,7 @@ struct SyllabusContext: Codable {
         case rawSummary = "raw_summary"
         case uploadedBy = "uploaded_by"
         case uploadedAt = "uploaded_at"
+        case parsedDates = "parsed_dates"
     }
 }
 

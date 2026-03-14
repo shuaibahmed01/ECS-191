@@ -6,6 +6,8 @@ struct ClassDetailView: View {
     @State private var isRemoving = false
     @State private var showRemoveConfirm = false
     @State private var removeError: String?
+    @State private var syllabusVM: SyllabusUploadViewModel?
+    @State private var remindersVM = RemindersViewModel()
     @Environment(\.dismiss) private var dismiss
 
     private var lectureSummary: String? {
@@ -89,6 +91,57 @@ struct ClassDetailView: View {
                 }
             }
 
+            // Important Dates section
+            Section("Important Dates") {
+                if let vm = syllabusVM, let dates = vm.syllabusContext?.parsedDates, !dates.isEmpty {
+                    ForEach(Array(dates.enumerated()), id: \.offset) { idx, parsed in
+                        let dateId = "\(entry.id)_\(idx)"
+                        VStack(alignment: .leading, spacing: 4) {
+                            HStack {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(parsed.title)
+                                        .font(.subheadline)
+                                        .fontWeight(.medium)
+                                    Text(formattedDate(parsed.date))
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                                Spacer()
+                                Toggle("", isOn: Binding(
+                                    get: { remindersVM.reminders[dateId]?.reminderEnabled ?? false },
+                                    set: { _ in
+                                        let importantDate = ImportantDate(
+                                            id: dateId,
+                                            classId: entry.id,
+                                            classCode: entry.classCode,
+                                            title: parsed.title,
+                                            date: parsed.date,
+                                            description: parsed.description
+                                        )
+                                        Task { await remindersVM.toggleReminder(for: importantDate) }
+                                    }
+                                ))
+                                .labelsHidden()
+                            }
+                            if !parsed.description.isEmpty {
+                                Text(parsed.description)
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                        .padding(.vertical, 2)
+                    }
+                } else if syllabusVM == nil || !((syllabusVM?.hasExistingSyllabus) ?? false) {
+                    Text("Upload a syllabus to see dates")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                } else {
+                    Text("No dates found in syllabus")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
             Section {
                 NavigationLink {
                     CourseInsightsView(classId: entry.id, classCode: entry.classCode)
@@ -162,7 +215,11 @@ struct ClassDetailView: View {
                 .disabled(isRemoving)
             }
         }
-        .sheet(isPresented: $showSyllabusSheet) {
+        .sheet(isPresented: $showSyllabusSheet, onDismiss: {
+            Task {
+                await syllabusVM?.loadExistingSyllabus()
+            }
+        }) {
             SyllabusUploadView(classId: entry.id, classCode: entry.classCode)
         }
         .navigationTitle(entry.classCode)
@@ -171,6 +228,22 @@ struct ClassDetailView: View {
             Button("OK") { removeError = nil }
         } message: {
             Text(removeError ?? "")
+        }
+        .task {
+            let vm = SyllabusUploadViewModel(classId: entry.id)
+            syllabusVM = vm
+            await vm.loadExistingSyllabus()
+            remindersVM.reminders = ReminderStore.shared.loadAll()
+        }
+        .alert("Notifications Disabled", isPresented: $remindersVM.permissionDenied) {
+            Button("Open Settings") {
+                if let url = URL(string: UIApplication.openSettingsURLString) {
+                    UIApplication.shared.open(url)
+                }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Enable notifications in Settings to receive reminders.")
         }
         .confirmationDialog(
             "Remove \(entry.classCode) from your schedule?",
@@ -191,6 +264,15 @@ struct ClassDetailView: View {
             }
             Button("Cancel", role: .cancel) {}
         }
+    }
+
+    private func formattedDate(_ dateString: String) -> String {
+        let inFormatter = DateFormatter()
+        inFormatter.dateFormat = "yyyy-MM-dd"
+        guard let date = inFormatter.date(from: dateString) else { return dateString }
+        let outFormatter = DateFormatter()
+        outFormatter.dateStyle = .medium
+        return outFormatter.string(from: date)
     }
 }
 

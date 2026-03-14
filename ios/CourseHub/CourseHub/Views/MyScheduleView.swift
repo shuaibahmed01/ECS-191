@@ -82,10 +82,17 @@ struct MyScheduleView: View {
                         .font(.headline)
                 }
                 ToolbarItem(placement: .topBarTrailing) {
-                    NavigationLink {
-                        GlobalSearchView()
-                    } label: {
-                        Image(systemName: "magnifyingglass")
+                    HStack(spacing: 16) {
+                        NavigationLink {
+                            UpcomingDatesView()
+                        } label: {
+                            Image(systemName: "bell.fill")
+                        }
+                        NavigationLink {
+                            GlobalSearchView()
+                        } label: {
+                            Image(systemName: "magnifyingglass")
+                        }
                     }
                 }
             }

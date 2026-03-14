@@ -10,6 +10,7 @@ from services.datastore_service import (
     unenroll_user,
     get_class_by_id,
 )
+from services.syllabus_service import get_syllabus_context
 
 users_bp = Blueprint("users", __name__)
 
@@ -83,3 +84,32 @@ def unenroll_from_class(enrollment_id):
         return jsonify({"error": "Enrollment not found"}), 404
 
     return "", 204
+
+
+@users_bp.route("/users/me/important-dates", methods=["GET"])
+@require_auth
+def get_important_dates():
+    """Return aggregated parsed dates across all enrolled classes, sorted by date."""
+    classes = get_user_classes(g.user_id)
+    dates = []
+    for cls in classes:
+        class_id = cls["id"]
+        class_code = cls.get("class_code", "")
+        syllabus = get_syllabus_context(class_id)
+        if not syllabus:
+            continue
+        parsed = syllabus.get("parsed_dates", [])
+        if not isinstance(parsed, list):
+            continue
+        for idx, entry in enumerate(parsed):
+            dates.append({
+                "id": f"{class_id}_{idx}",
+                "class_id": class_id,
+                "class_code": class_code,
+                "title": entry.get("title", ""),
+                "date": entry.get("date", ""),
+                "description": entry.get("description", ""),
+            })
+    dates = [d for d in dates if d["date"]]
+    dates.sort(key=lambda d: d["date"])
+    return jsonify({"dates": dates})
