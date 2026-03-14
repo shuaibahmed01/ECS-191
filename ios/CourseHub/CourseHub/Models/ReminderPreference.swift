@@ -4,12 +4,14 @@ enum ReminderTime: String, Codable, CaseIterable {
     case oneHourBefore = "one_hour_before"
     case dayBefore = "day_before"
     case twoDaysBefore = "two_days_before"
+    case oneWeekBefore = "one_week_before"
 
     var displayName: String {
         switch self {
-        case .oneHourBefore: return "1 hour before"
-        case .dayBefore: return "24 hours before"
-        case .twoDaysBefore: return "48 hours before"
+        case .oneHourBefore: return "1 hour"
+        case .dayBefore: return "1 day"
+        case .twoDaysBefore: return "2 days"
+        case .oneWeekBefore: return "1 week"
         }
     }
 
@@ -18,6 +20,7 @@ enum ReminderTime: String, Codable, CaseIterable {
         case .oneHourBefore: return -1
         case .dayBefore: return -24
         case .twoDaysBefore: return -48
+        case .oneWeekBefore: return -168
         }
     }
 }
@@ -29,4 +32,5 @@ struct ReminderPreference: Codable {
     let date: String
     var reminderEnabled: Bool
     var reminderTime: ReminderTime
+    var customDate: String?
 }

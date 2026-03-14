@@ -8,7 +8,7 @@ struct ImportantDate: Codable, Identifiable {
     let date: String
     let description: String
 
-    private static let dateFormatter: DateFormatter = {
+    static let dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd"
         formatter.locale = Locale(identifier: "en_US_POSIX")

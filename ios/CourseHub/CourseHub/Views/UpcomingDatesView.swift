@@ -70,7 +70,7 @@ struct UpcomingDatesView: View {
                             .background(Color.blue.opacity(0.12))
                             .foregroundStyle(.blue)
                             .clipShape(Capsule())
-                        Text(formattedDate(date.date))
+                        Text(formattedDate(viewModel.effectiveDateString(for: date)))
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                     }
@@ -92,8 +92,27 @@ struct UpcomingDatesView: View {
                         .foregroundStyle(.secondary)
                 }
 
-                if viewModel.reminders[date.id]?.reminderEnabled == true {
-                    Picker("Remind", selection: Binding(
+                // Event date picker
+                DatePicker(
+                    "Event Date",
+                    selection: Binding(
+                        get: {
+                            viewModel.effectiveParsedDate(for: date) ?? Date()
+                        },
+                        set: { newDate in
+                            viewModel.updateEventDate(for: date, newDate: newDate)
+                        }
+                    ),
+                    displayedComponents: .date
+                )
+                .datePickerStyle(.compact)
+
+                // Reminder time picker
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Remind me")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    Picker("", selection: Binding(
                         get: { viewModel.reminders[date.id]?.reminderTime ?? .dayBefore },
                         set: { newTime in
                             viewModel.updateReminderTime(for: date, time: newTime)
@@ -117,9 +136,7 @@ struct UpcomingDatesView: View {
     }
 
     private func formattedDate(_ dateString: String) -> String {
-        let inFormatter = DateFormatter()
-        inFormatter.dateFormat = "yyyy-MM-dd"
-        guard let date = inFormatter.date(from: dateString) else { return dateString }
+        guard let date = ImportantDate.dateFormatter.date(from: dateString) else { return dateString }
         let outFormatter = DateFormatter()
         outFormatter.dateStyle = .medium
         return outFormatter.string(from: date)

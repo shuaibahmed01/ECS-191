@@ -14,8 +14,10 @@ final class NotificationService {
         }
     }
 
-    func scheduleReminder(for date: ImportantDate, time: ReminderTime) {
-        guard let eventDate = date.parsedDate else { return }
+    func scheduleReminder(for date: ImportantDate, time: ReminderTime, customDate: String? = nil) {
+        let dateString = customDate ?? date.date
+        let formatter = ImportantDate.dateFormatter
+        guard let eventDate = formatter.date(from: dateString) else { return }
 
         let content = UNMutableNotificationContent()
         content.title = date.title

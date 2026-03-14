@@ -96,13 +96,60 @@ struct ClassDetailView: View {
                 if let vm = syllabusVM, let dates = vm.syllabusContext?.parsedDates, !dates.isEmpty {
                     ForEach(Array(dates.enumerated()), id: \.offset) { idx, parsed in
                         let dateId = "\(entry.id)_\(idx)"
-                        VStack(alignment: .leading, spacing: 4) {
+                        let importantDate = ImportantDate(
+                            id: dateId,
+                            classId: entry.id,
+                            classCode: entry.classCode,
+                            title: parsed.title,
+                            date: parsed.date,
+                            description: parsed.description
+                        )
+                        DisclosureGroup {
+                            VStack(alignment: .leading, spacing: 8) {
+                                if !parsed.description.isEmpty {
+                                    Text(parsed.description)
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                                DatePicker(
+                                    "Event Date",
+                                    selection: Binding(
+                                        get: {
+                                            remindersVM.effectiveParsedDate(for: importantDate) ?? Date()
+                                        },
+                                        set: { newDate in
+                                            remindersVM.updateEventDate(for: importantDate, newDate: newDate)
+                                        }
+                                    ),
+                                    displayedComponents: .date
+                                )
+                                .datePickerStyle(.compact)
+                                .font(.subheadline)
+
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("Remind me")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                    Picker("", selection: Binding(
+                                        get: { remindersVM.reminders[dateId]?.reminderTime ?? .dayBefore },
+                                        set: { newTime in
+                                            remindersVM.updateReminderTime(for: importantDate, time: newTime)
+                                        }
+                                    )) {
+                                        ForEach(ReminderTime.allCases, id: \.self) { time in
+                                            Text(time.displayName).tag(time)
+                                        }
+                                    }
+                                    .pickerStyle(.segmented)
+                                }
+                            }
+                        } label: {
                             HStack {
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text(parsed.title)
                                         .font(.subheadline)
                                         .fontWeight(.medium)
-                                    Text(formattedDate(parsed.date))
+                                    Text(formattedDate(remindersVM.reminders[dateId]?.customDate ?? parsed.date))
                                         .font(.caption)
                                         .foregroundStyle(.secondary)
                                 }
@@ -110,26 +157,12 @@ struct ClassDetailView: View {
                                 Toggle("", isOn: Binding(
                                     get: { remindersVM.reminders[dateId]?.reminderEnabled ?? false },
                                     set: { _ in
-                                        let importantDate = ImportantDate(
-                                            id: dateId,
-                                            classId: entry.id,
-                                            classCode: entry.classCode,
-                                            title: parsed.title,
-                                            date: parsed.date,
-                                            description: parsed.description
-                                        )
                                         Task { await remindersVM.toggleReminder(for: importantDate) }
                                     }
                                 ))
                                 .labelsHidden()
                             }
-                            if !parsed.description.isEmpty {
-                                Text(parsed.description)
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                            }
                         }
-                        .padding(.vertical, 2)
                     }
                 } else if syllabusVM == nil || !((syllabusVM?.hasExistingSyllabus) ?? false) {
                     Text("Upload a syllabus to see dates")

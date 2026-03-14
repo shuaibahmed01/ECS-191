@@ -11,8 +11,13 @@ class RemindersViewModel {
     var upcomingDates: [ImportantDate] {
         let now = Calendar.current.startOfDay(for: Date())
         return allDates
-            .filter { ($0.parsedDate ?? .distantPast) >= now }
-            .sorted { ($0.parsedDate ?? .distantPast) < ($1.parsedDate ?? .distantPast) }
+            .filter {
+                let effectiveDate = effectiveParsedDate(for: $0) ?? .distantPast
+                return effectiveDate >= now
+            }
+            .sorted {
+                (effectiveParsedDate(for: $0) ?? .distantPast) < (effectiveParsedDate(for: $1) ?? .distantPast)
+            }
     }
 
     var datesByMonth: [(String, [ImportantDate])] {
@@ -21,11 +26,20 @@ class RemindersViewModel {
         var grouped: [String: [ImportantDate]] = [:]
         var order: [String] = []
         for date in upcomingDates {
-            let key = date.parsedDate.map { formatter.string(from: $0) } ?? "Unknown"
+            let key = effectiveParsedDate(for: date).map { formatter.string(from: $0) } ?? "Unknown"
             if grouped[key] == nil { order.append(key) }
             grouped[key, default: []].append(date)
         }
         return order.map { ($0, grouped[$0]!) }
+    }
+
+    func effectiveDateString(for date: ImportantDate) -> String {
+        reminders[date.id]?.customDate ?? date.date
+    }
+
+    func effectiveParsedDate(for date: ImportantDate) -> Date? {
+        let dateString = effectiveDateString(for: date)
+        return ImportantDate.dateFormatter.date(from: dateString)
     }
 
     @MainActor
@@ -55,17 +69,19 @@ class RemindersViewModel {
         }
 
         let time = existing?.reminderTime ?? .dayBefore
-        var pref = ReminderPreference(
+        let customDate = existing?.customDate
+        let pref = ReminderPreference(
             dateId: date.id,
             classId: date.classId,
             title: date.title,
             date: date.date,
             reminderEnabled: !wasEnabled,
-            reminderTime: time
+            reminderTime: time,
+            customDate: customDate
         )
 
         if pref.reminderEnabled {
-            NotificationService.shared.scheduleReminder(for: date, time: time)
+            NotificationService.shared.scheduleReminder(for: date, time: time, customDate: customDate)
         } else {
             NotificationService.shared.cancelReminder(dateId: date.id)
         }
@@ -81,7 +97,30 @@ class RemindersViewModel {
 
         if pref.reminderEnabled {
             NotificationService.shared.cancelReminder(dateId: date.id)
-            NotificationService.shared.scheduleReminder(for: date, time: time)
+            NotificationService.shared.scheduleReminder(for: date, time: time, customDate: pref.customDate)
+        }
+
+        reminders[date.id] = pref
+        ReminderStore.shared.setPreference(pref)
+    }
+
+    @MainActor
+    func updateEventDate(for date: ImportantDate, newDate: Date) {
+        let dateString = ImportantDate.dateFormatter.string(from: newDate)
+        var pref = reminders[date.id] ?? ReminderPreference(
+            dateId: date.id,
+            classId: date.classId,
+            title: date.title,
+            date: date.date,
+            reminderEnabled: false,
+            reminderTime: .dayBefore,
+            customDate: nil
+        )
+        pref.customDate = dateString
+
+        if pref.reminderEnabled {
+            NotificationService.shared.cancelReminder(dateId: date.id)
+            NotificationService.shared.scheduleReminder(for: date, time: pref.reminderTime, customDate: dateString)
         }
 
         reminders[date.id] = pref

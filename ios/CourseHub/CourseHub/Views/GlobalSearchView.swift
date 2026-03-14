@@ -17,15 +17,6 @@ struct GlobalSearchView: View {
     
     var body: some View {
         VStack {
-            // Hidden navigation links for programmatic navigation
-            NavigationLink(isActive: $pushChat) {
-                ChatView(classId: chatClassId, classCode: chatClassCode.isEmpty ? chatClassId : chatClassCode)
-            } label: { EmptyView() }.hidden()
-            
-            NavigationLink(isActive: $pushSyllabus) {
-                SyllabusUploadView(classId: syllabusClassId, classCode: syllabusClassCode.isEmpty ? syllabusClassId : syllabusClassCode, highlightField: syllabusField)
-            } label: { EmptyView() }.hidden()
-            
             if results.isEmpty && !isSearching {
                 ContentUnavailableView("Search", systemImage: "magnifyingglass", description: Text("Search syllabus and recent chat across your classes"))
             } else {
@@ -72,6 +63,12 @@ struct GlobalSearchView: View {
             Button("OK") { errorMessage = nil }
         } message: {
             Text(errorMessage ?? "")
+        }
+        .navigationDestination(isPresented: $pushChat) {
+            ChatView(classId: chatClassId, classCode: chatClassCode.isEmpty ? chatClassId : chatClassCode)
+        }
+        .navigationDestination(isPresented: $pushSyllabus) {
+            SyllabusUploadView(classId: syllabusClassId, classCode: syllabusClassCode.isEmpty ? syllabusClassId : syllabusClassCode, highlightField: syllabusField)
         }
     }
     
