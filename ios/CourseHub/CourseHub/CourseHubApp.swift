@@ -4,12 +4,10 @@ import FirebaseCore
 @main
 struct CourseHubApp: App {
     @State private var authViewModel: AuthViewModel
+    @State private var themeManager = ThemeManager.shared
 
     init() {
-        // Configure Firebase FIRST, before creating AuthViewModel
         FirebaseApp.configure()
-
-        // Now safe to create AuthViewModel
         _authViewModel = State(initialValue: AuthViewModel())
     }
 
@@ -24,6 +22,7 @@ struct CourseHubApp: App {
                     LoginView(authViewModel: authViewModel)
                 }
             }
+            .preferredColorScheme(themeManager.currentTheme.colorScheme)
         }
     }
 }

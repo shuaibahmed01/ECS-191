@@ -49,6 +49,7 @@
 		A1000044 /* RemindersViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000044 /* RemindersViewModel.swift */; };
 		A1000045 /* UpcomingDatesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000045 /* UpcomingDatesView.swift */; };
 		A1000046 /* ClassRemindersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000046 /* ClassRemindersView.swift */; };
+		A1000047 /* ThemeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000047 /* ThemeManager.swift */; };
 		CF68ADF02F3A00000018AC36 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = CF68ADEF2F3A00000018AC36 /* FirebaseFirestore */; };
 /* End PBXBuildFile section */
 
@@ -94,6 +95,7 @@
 		A2000044 /* RemindersViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemindersViewModel.swift; sourceTree = "<group>"; };
 		A2000045 /* UpcomingDatesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpcomingDatesView.swift; sourceTree = "<group>"; };
 		A2000046 /* ClassRemindersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClassRemindersView.swift; sourceTree = "<group>"; };
+		A2000047 /* ThemeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeManager.swift; sourceTree = "<group>"; };
 		A3000001 /* CourseHub.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CourseHub.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -203,6 +205,7 @@
 			children = (
 				A2000042 /* NotificationService.swift */,
 				A2000043 /* ReminderStore.swift */,
+				A2000047 /* ThemeManager.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -326,6 +329,7 @@
 				A1000044 /* RemindersViewModel.swift in Sources */,
 				A1000045 /* UpcomingDatesView.swift in Sources */,
 				A1000046 /* ClassRemindersView.swift in Sources */,
+				A1000047 /* ThemeManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

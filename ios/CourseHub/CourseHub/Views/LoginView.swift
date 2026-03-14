@@ -13,106 +13,134 @@ struct LoginView: View {
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 24) {
-                // Logo/Title
-                VStack(spacing: 8) {
-                    Image(systemName: "book.circle.fill")
-                        .font(.system(size: 80))
-                        .foregroundStyle(.blue)
+            ScrollView {
+                VStack(spacing: 32) {
+                    Spacer().frame(height: 40)
 
-                    Text("CourseHub")
-                        .font(.largeTitle)
-                        .fontWeight(.bold)
+                    // Logo
+                    VStack(spacing: 12) {
+                        ZStack {
+                            Circle()
+                                .fill(Color.blue.gradient)
+                                .frame(width: 88, height: 88)
+                            Image(systemName: "book.fill")
+                                .font(.system(size: 38))
+                                .foregroundStyle(.white)
+                        }
 
-                    Text(isSignUp ? "Create your account" : "Sign in to continue")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                }
-                .padding(.top, 40)
+                        Text("CourseHub")
+                            .font(.largeTitle.bold())
 
-                // Form fields
-                VStack(spacing: 16) {
-                    if isSignUp {
-                        TextField("Display Name", text: $displayName)
-                            .textFieldStyle(.roundedBorder)
-                            .textContentType(.name)
-                            .autocorrectionDisabled()
+                        Text(isSignUp ? "Create your account" : "Sign in to continue")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
                     }
 
-                    TextField("Email", text: $email)
-                        .textFieldStyle(.roundedBorder)
-                        .textContentType(.emailAddress)
-                        .keyboardType(.emailAddress)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
+                    // Form
+                    VStack(spacing: 14) {
+                        if isSignUp {
+                            HStack(spacing: 12) {
+                                Image(systemName: "person")
+                                    .foregroundStyle(.secondary)
+                                    .frame(width: 20)
+                                TextField("Display Name", text: $displayName)
+                                    .textContentType(.name)
+                                    .autocorrectionDisabled()
+                            }
+                            .padding(14)
+                            .background(Color(.secondarySystemBackground))
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                        }
 
-                    SecureField("Password", text: $password)
-                        .textFieldStyle(.roundedBorder)
-                        .textContentType(isSignUp ? .newPassword : .password)
-                }
-                .padding(.horizontal, 24)
+                        HStack(spacing: 12) {
+                            Image(systemName: "envelope")
+                                .foregroundStyle(.secondary)
+                                .frame(width: 20)
+                            TextField("Email", text: $email)
+                                .textContentType(.emailAddress)
+                                .keyboardType(.emailAddress)
+                                .textInputAutocapitalization(.never)
+                                .autocorrectionDisabled()
+                        }
+                        .padding(14)
+                        .background(Color(.secondarySystemBackground))
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
 
-                // Error message
-                if let error = authViewModel.errorMessage {
-                    Text(error)
-                        .font(.caption)
-                        .foregroundStyle(.red)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal, 24)
-                }
+                        HStack(spacing: 12) {
+                            Image(systemName: "lock")
+                                .foregroundStyle(.secondary)
+                                .frame(width: 20)
+                            SecureField("Password", text: $password)
+                                .textContentType(isSignUp ? .newPassword : .password)
+                        }
+                        .padding(14)
+                        .background(Color(.secondarySystemBackground))
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                    }
+                    .padding(.horizontal, 24)
 
-                // Action buttons
-                VStack(spacing: 12) {
-                    Button {
-                        Task {
-                            if isSignUp {
-                                await authViewModel.signUp(
-                                    email: email,
-                                    password: password,
-                                    displayName: displayName
-                                )
-                            } else {
-                                await authViewModel.signIn(email: email, password: password)
+                    // Error
+                    if let error = authViewModel.errorMessage {
+                        Text(error)
+                            .font(.caption)
+                            .foregroundStyle(.red)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, 24)
+                    }
+
+                    // Buttons
+                    VStack(spacing: 14) {
+                        Button {
+                            Task {
+                                if isSignUp {
+                                    await authViewModel.signUp(
+                                        email: email,
+                                        password: password,
+                                        displayName: displayName
+                                    )
+                                } else {
+                                    await authViewModel.signIn(email: email, password: password)
+                                }
+                            }
+                        } label: {
+                            Text(isSignUp ? "Sign Up" : "Sign In")
+                                .fontWeight(.semibold)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 16)
+                                .background(isFormValid ? Color.blue.gradient : Color.gray.opacity(0.3).gradient)
+                                .foregroundStyle(.white)
+                                .clipShape(RoundedRectangle(cornerRadius: 14))
+                        }
+                        .disabled(!isFormValid)
+
+                        if !isSignUp {
+                            Button("Forgot Password?") {
+                                forgotPasswordEmail = email
+                                showForgotPassword = true
+                            }
+                            .font(.subheadline)
+                            .foregroundStyle(.blue)
+                        }
+                    }
+                    .padding(.horizontal, 24)
+
+                    Spacer()
+
+                    // Toggle
+                    HStack(spacing: 4) {
+                        Text(isSignUp ? "Already have an account?" : "Don't have an account?")
+                            .foregroundStyle(.secondary)
+                        Button(isSignUp ? "Sign In" : "Sign Up") {
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                isSignUp.toggle()
+                                authViewModel.errorMessage = nil
                             }
                         }
-                    } label: {
-                        Text(isSignUp ? "Sign Up" : "Sign In")
-                            .fontWeight(.semibold)
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(Color.blue)
-                            .foregroundStyle(.white)
-                            .cornerRadius(10)
+                        .fontWeight(.semibold)
                     }
-                    .disabled(!isFormValid)
-                    .opacity(isFormValid ? 1 : 0.6)
-
-                    if !isSignUp {
-                        Button("Forgot Password?") {
-                            forgotPasswordEmail = email
-                            showForgotPassword = true
-                        }
-                        .font(.subheadline)
-                    }
+                    .font(.subheadline)
+                    .padding(.bottom, 24)
                 }
-                .padding(.horizontal, 24)
-
-                Spacer()
-
-                // Toggle sign up/sign in
-                HStack {
-                    Text(isSignUp ? "Already have an account?" : "Don't have an account?")
-                        .foregroundStyle(.secondary)
-                    Button(isSignUp ? "Sign In" : "Sign Up") {
-                        withAnimation {
-                            isSignUp.toggle()
-                            authViewModel.errorMessage = nil
-                        }
-                    }
-                    .fontWeight(.semibold)
-                }
-                .font(.subheadline)
-                .padding(.bottom, 24)
             }
             .alert("Reset Password", isPresented: $showForgotPassword) {
                 TextField("Email", text: $forgotPasswordEmail)

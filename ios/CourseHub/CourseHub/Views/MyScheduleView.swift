@@ -29,13 +29,31 @@ struct MyScheduleView: View {
                             NavigationLink {
                                 ClassDetailView(entry: entry)
                             } label: {
-                                VStack(alignment: .leading) {
-                                    Text(entry.classCode)
-                                        .font(.headline)
-                                    Text(entry.className)
-                                        .font(.subheadline)
-                                        .foregroundColor(.secondary)
+                                HStack(spacing: 14) {
+                                    // Color accent bar
+                                    RoundedRectangle(cornerRadius: 3)
+                                        .fill(Color.blue.gradient)
+                                        .frame(width: 4, height: 44)
+
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text(entry.classCode)
+                                            .font(.headline)
+                                        Text(entry.className)
+                                            .font(.subheadline)
+                                            .foregroundStyle(.secondary)
+                                            .lineLimit(1)
+                                    }
+
+                                    Spacer()
+
+                                    if let times = entry.lectureTimes, let first = times.first {
+                                        Text(first)
+                                            .font(.caption)
+                                            .foregroundStyle(.secondary)
+                                            .lineLimit(1)
+                                    }
                                 }
+                                .padding(.vertical, 4)
                             }
                             .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                                 Button(role: .destructive) {
@@ -58,17 +76,17 @@ struct MyScheduleView: View {
                         Button {
                             showingAddClass = true
                         } label: {
-                            HStack {
+                            HStack(spacing: 8) {
                                 Image(systemName: "plus")
                                 Text("Add Class")
                             }
-                            .font(.headline)
+                            .font(.subheadline.bold())
                             .foregroundStyle(.white)
                             .padding(.horizontal, 20)
                             .padding(.vertical, 14)
-                            .background(Color.blue)
+                            .background(Color.blue.gradient)
                             .clipShape(Capsule())
-                            .shadow(radius: 4)
+                            .shadow(color: .black.opacity(0.15), radius: 8, y: 4)
                         }
                         Spacer()
                     }

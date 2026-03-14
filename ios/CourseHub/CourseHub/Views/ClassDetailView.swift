@@ -15,7 +15,7 @@ struct ClassDetailView: View {
 
     var body: some View {
         List {
-            // Prominent Group Chat callout for better discoverability
+            // Group Chat
             Section {
                 NavigationLink {
                     ChatView(classId: entry.id, classCode: entry.classCode)
@@ -24,101 +24,64 @@ struct ClassDetailView: View {
                         Image(systemName: "bubble.left.and.bubble.right.fill")
                             .font(.title2.bold())
                             .foregroundStyle(.white)
-                            .frame(width: 36, height: 36)
-                            .background(Color.blue)
-                            .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                            .frame(width: 40, height: 40)
+                            .background(Color.blue.gradient)
+                            .clipShape(RoundedRectangle(cornerRadius: 10))
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("Open Class Group Chat")
+                            Text("Group Chat")
                                 .font(.headline)
-                            Text("Chat with classmates, ask questions, share resources")
+                            Text("Chat with classmates")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         }
                         Spacer()
                     }
-                    .padding(.vertical, 6)
+                    .padding(.vertical, 4)
                 }
             }
 
+            // Class Info
             Section {
-                HStack(spacing: 12) {
-                    Image(systemName: "book.fill")
-                        .font(.title2)
-                        .foregroundStyle(.blue)
-                        .frame(width: 36)
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(entry.classCode)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                        Text(entry.className)
-                            .font(.headline)
-                    }
+                infoRow(icon: "book.fill", color: .blue) {
+                    Text(entry.classCode)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Text(entry.className)
+                        .font(.headline)
                 }
-                .padding(.vertical, 4)
 
                 if let quarter = entry.quarter {
-                    HStack(spacing: 12) {
-                        Image(systemName: "calendar")
-                            .font(.title2)
-                            .foregroundStyle(.orange)
-                            .frame(width: 36)
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("Quarter")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                            Text(quarter)
-                                .font(.subheadline)
-                        }
+                    infoRow(icon: "calendar", color: .orange) {
+                        Text("Quarter")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        Text(quarter)
+                            .font(.subheadline)
                     }
                 }
 
                 if let times = lectureSummary {
-                    HStack(spacing: 12) {
-                        Image(systemName: "clock.fill")
-                            .font(.title2)
-                            .foregroundStyle(.green)
-                            .frame(width: 36)
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("Lecture")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                            Text(times)
-                                .font(.subheadline)
-                        }
+                    infoRow(icon: "clock.fill", color: .green) {
+                        Text("Lecture")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        Text(times)
+                            .font(.subheadline)
                     }
                 }
             }
 
+            // Quick Links
             Section {
-                NavigationLink {
+                navRow(icon: "bell.fill", color: .red, title: "Reminders") {
                     ClassRemindersView(classId: entry.id, classCode: entry.classCode)
-                } label: {
-                    HStack(spacing: 12) {
-                        Image(systemName: "bell.fill")
-                            .font(.title2)
-                            .foregroundStyle(.red)
-                            .frame(width: 36)
-                        Text("Reminders")
-                    }
                 }
-            }
-
-            Section {
-                NavigationLink {
+                navRow(icon: "lightbulb.fill", color: .yellow, title: "Course Insights") {
                     CourseInsightsView(classId: entry.id, classCode: entry.classCode)
-                } label: {
-                    HStack(spacing: 12) {
-                        Image(systemName: "lightbulb.fill")
-                            .font(.title2)
-                            .foregroundStyle(.yellow)
-                            .frame(width: 36)
-                        Text("Course Insights")
-                    }
                 }
             }
 
-            
-
+            // Syllabus & AI
             Section("Syllabus & AI") {
                 Button {
                     showSyllabusSheet = true
@@ -133,32 +96,15 @@ struct ClassDetailView: View {
                     }
                 }
 
-                NavigationLink {
+                navRow(icon: "rectangle.stack.fill", color: .teal, title: "Lecture Slides") {
                     SlidesView(classId: entry.id, classCode: entry.classCode)
-                } label: {
-                    HStack(spacing: 12) {
-                        Image(systemName: "rectangle.stack.fill")
-                            .font(.title2)
-                            .foregroundStyle(.teal)
-                            .frame(width: 36)
-                        Text("Lecture Slides")
-                    }
                 }
-
-                NavigationLink {
+                navRow(icon: "sparkles", color: .purple, title: "Course Agent") {
                     CourseAgentView(classId: entry.id, classCode: entry.classCode)
-                } label: {
-                    HStack(spacing: 12) {
-                        Image(systemName: "sparkles")
-                            .font(.title2)
-                            .foregroundStyle(.purple)
-                            .frame(width: 36)
-                        Text("Course Agent")
-                    }
                 }
             }
 
-            // Destructive action to remove class (more discoverable than swipe)
+            // Remove
             Section {
                 Button(role: .destructive) {
                     showRemoveConfirm = true
@@ -207,6 +153,34 @@ struct ClassDetailView: View {
         }
     }
 
+    // MARK: - Helpers
+
+    private func infoRow<Content: View>(icon: String, color: Color, @ViewBuilder content: () -> Content) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: icon)
+                .font(.title2)
+                .foregroundStyle(color)
+                .frame(width: 36)
+            VStack(alignment: .leading, spacing: 2) {
+                content()
+            }
+        }
+        .padding(.vertical, 4)
+    }
+
+    private func navRow<Destination: View>(icon: String, color: Color, title: String, @ViewBuilder destination: () -> Destination) -> some View {
+        NavigationLink {
+            destination()
+        } label: {
+            HStack(spacing: 12) {
+                Image(systemName: icon)
+                    .font(.title2)
+                    .foregroundStyle(color)
+                    .frame(width: 36)
+                Text(title)
+            }
+        }
+    }
 }
 
 #Preview {
