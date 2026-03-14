@@ -1,23 +1,23 @@
 import Foundation
 
 enum ReminderTime: String, Codable, CaseIterable {
-    case morningOf = "morning_of"
+    case oneHourBefore = "one_hour_before"
     case dayBefore = "day_before"
     case twoDaysBefore = "two_days_before"
 
     var displayName: String {
         switch self {
-        case .morningOf: return "Morning of"
-        case .dayBefore: return "Day before"
-        case .twoDaysBefore: return "2 days before"
+        case .oneHourBefore: return "1 hour before"
+        case .dayBefore: return "24 hours before"
+        case .twoDaysBefore: return "48 hours before"
         }
     }
 
-    var dayOffset: Int {
+    var hourOffset: Int {
         switch self {
-        case .morningOf: return 0
-        case .dayBefore: return -1
-        case .twoDaysBefore: return -2
+        case .oneHourBefore: return -1
+        case .dayBefore: return -24
+        case .twoDaysBefore: return -48
         }
     }
 }

@@ -23,14 +23,12 @@ final class NotificationService {
         content.sound = .default
 
         let calendar = Calendar.current
-        guard let triggerDate = calendar.date(byAdding: .day, value: time.dayOffset, to: eventDate) else { return }
-        var components = calendar.dateComponents([.year, .month, .day], from: triggerDate)
-        components.hour = 8
-        components.minute = 0
+        guard let triggerDate = calendar.date(byAdding: .hour, value: time.hourOffset, to: eventDate) else { return }
 
         // Don't schedule notifications in the past
-        if let fireDate = calendar.date(from: components), fireDate <= Date() { return }
+        if triggerDate <= Date() { return }
 
+        let components = calendar.dateComponents([.year, .month, .day, .hour, .minute], from: triggerDate)
         let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: false)
         let request = UNNotificationRequest(
             identifier: date.id,
