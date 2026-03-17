@@ -16,6 +16,12 @@ from services.syllabus_service import (
     generate_flashcards,
     save_flashcards,
     get_flashcards,
+    generate_practice_exam,
+    save_practice_exam,
+    get_practice_exams,
+    get_practice_exam,
+    grade_practice_exam,
+    get_exam_attempts,
 )
 from services.datastore_service import is_user_enrolled, get_class_by_id
 from services.auth_service import require_auth
@@ -269,3 +275,110 @@ def fetch_flashcards(class_id, slide_id):
         return jsonify({"error": "No flashcards generated for this slide"}), 404
 
     return jsonify({"flashcards": data})
+
+
+# ── Practice exam endpoints ──────────────────────────────────────────────────
+
+
+@syllabus_bp.route("/classes/<class_id>/practice-exams", methods=["POST"])
+@require_auth
+def create_practice_exam(class_id):
+    """Generate a new practice exam from selected slides."""
+    if not is_user_enrolled(g.user_id, class_id):
+        return jsonify({"error": "Not enrolled in this class"}), 403
+
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "Request body is required"}), 400
+
+    title = data.get("title")
+    slide_ids = data.get("slide_ids")
+    if not title or not slide_ids:
+        return jsonify({"error": "title and slide_ids are required"}), 400
+
+    description = data.get("description", "")
+    question_count = data.get("question_count", 10)
+    question_type = data.get("question_type", "mixed")
+
+    if question_type not in ("multiple_choice", "short_answer", "mixed"):
+        return jsonify({"error": "question_type must be multiple_choice, short_answer, or mixed"}), 400
+
+    try:
+        questions = generate_practice_exam(
+            class_id, slide_ids, title, description, question_count, question_type
+        )
+        exam_id = save_practice_exam(
+            class_id, g.user_id, title, description, slide_ids, questions, question_type
+        )
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 422
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": f"Failed to generate practice exam: {str(e)}"}), 500
+
+    exam = get_practice_exam(class_id, exam_id)
+    return jsonify({"exam": exam}), 201
+
+
+@syllabus_bp.route("/classes/<class_id>/practice-exams", methods=["GET"])
+@require_auth
+def list_practice_exams(class_id):
+    """List all practice exams for a class."""
+    if not is_user_enrolled(g.user_id, class_id):
+        return jsonify({"error": "Not enrolled in this class"}), 403
+
+    exams = get_practice_exams(class_id)
+    return jsonify({"exams": exams})
+
+
+@syllabus_bp.route("/classes/<class_id>/practice-exams/<exam_id>", methods=["GET"])
+@require_auth
+def fetch_practice_exam(class_id, exam_id):
+    """Get a single practice exam with questions."""
+    if not is_user_enrolled(g.user_id, class_id):
+        return jsonify({"error": "Not enrolled in this class"}), 403
+
+    exam = get_practice_exam(class_id, exam_id)
+    if not exam:
+        return jsonify({"error": "Exam not found"}), 404
+
+    return jsonify({"exam": exam})
+
+
+@syllabus_bp.route("/classes/<class_id>/practice-exams/<exam_id>/submit", methods=["POST"])
+@require_auth
+def submit_practice_exam(class_id, exam_id):
+    """Submit answers for grading."""
+    if not is_user_enrolled(g.user_id, class_id):
+        return jsonify({"error": "Not enrolled in this class"}), 403
+
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "Request body is required"}), 400
+
+    answers = data.get("answers")
+    if answers is None:
+        return jsonify({"error": "answers are required"}), 400
+
+    try:
+        results = grade_practice_exam(class_id, exam_id, g.user_id, answers)
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 404
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": f"Failed to grade exam: {str(e)}"}), 500
+
+    return jsonify({"results": results})
+
+
+@syllabus_bp.route("/classes/<class_id>/practice-exams/<exam_id>/attempts", methods=["GET"])
+@require_auth
+def list_exam_attempts(class_id, exam_id):
+    """List a user's past attempts for an exam."""
+    if not is_user_enrolled(g.user_id, class_id):
+        return jsonify({"error": "Not enrolled in this class"}), 403
+
+    attempts = get_exam_attempts(class_id, exam_id, g.user_id)
+    return jsonify({"attempts": attempts})
