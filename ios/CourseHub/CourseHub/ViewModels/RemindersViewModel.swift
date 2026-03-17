@@ -47,7 +47,9 @@ class RemindersViewModel {
         isLoading = true
         errorMessage = nil
         do {
-            allDates = try await APIClient.shared.fetchImportantDates()
+            var dates = try await APIClient.shared.fetchImportantDates()
+            dates.append(contentsOf: CustomReminderStore.shared.loadAll())
+            allDates = dates
             reminders = ReminderStore.shared.loadAll()
         } catch {
             errorMessage = error.localizedDescription

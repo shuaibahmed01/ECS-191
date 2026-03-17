@@ -3,6 +3,7 @@ import SwiftUI
 struct UpcomingDatesView: View {
     @State private var viewModel = RemindersViewModel()
     @State private var expandedDateId: String?
+    @State private var showingAddReminder = false
 
     var body: some View {
         Group {
@@ -20,6 +21,13 @@ struct UpcomingDatesView: View {
                         Section(month) {
                             ForEach(dates) { date in
                                 dateRow(date)
+                                    .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                                        Button(role: .destructive) {
+                                            deleteReminder(date)
+                                        } label: {
+                                            Label("Delete", systemImage: "trash")
+                                        }
+                                    }
                             }
                         }
                     }
@@ -28,6 +36,20 @@ struct UpcomingDatesView: View {
         }
         .navigationTitle("Upcoming Dates")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    showingAddReminder = true
+                } label: {
+                    Image(systemName: "plus")
+                }
+            }
+        }
+        .sheet(isPresented: $showingAddReminder) {
+            AddReminderView {
+                Task { await viewModel.loadDates() }
+            }
+        }
         .task {
             await viewModel.loadDates()
         }
@@ -131,6 +153,15 @@ struct UpcomingDatesView: View {
                 expandedDateId = expandedDateId == date.id ? nil : date.id
             }
         }
+    }
+
+    private func deleteReminder(_ date: ImportantDate) {
+        if date.id.hasPrefix("custom_") {
+            CustomReminderStore.shared.remove(id: date.id)
+        }
+        NotificationService.shared.cancelReminder(dateId: date.id)
+        viewModel.allDates.removeAll { $0.id == date.id }
+        viewModel.reminders.removeValue(forKey: date.id)
     }
 
     private func formattedDateTime(_ dateString: String) -> String {

@@ -7,8 +7,10 @@ struct ClassRemindersView: View {
     @State private var syllabusVM: SyllabusUploadViewModel?
     @State private var remindersVM = RemindersViewModel()
     @State private var expandedDateId: String?
+    @State private var showingAddReminder = false
+    @State private var customReminders: [ImportantDate] = []
 
-    private var dates: [ImportantDate] {
+    private var syllabusDates: [ImportantDate] {
         guard let parsed = syllabusVM?.syllabusContext?.parsedDates else { return [] }
         return parsed.enumerated().map { idx, p in
             ImportantDate(
@@ -22,30 +24,75 @@ struct ClassRemindersView: View {
         }
     }
 
+    private var allDates: [ImportantDate] {
+        syllabusDates + customReminders
+    }
+
     var body: some View {
         Group {
             if syllabusVM == nil {
                 ProgressView("Loading...")
-            } else if dates.isEmpty {
+            } else if allDates.isEmpty {
                 ContentUnavailableView(
-                    "No Important Dates",
-                    systemImage: "calendar",
-                    description: Text("Upload a syllabus to see important dates for this class.")
+                    "No Reminders",
+                    systemImage: "bell",
+                    description: Text("Upload a syllabus or tap + to create a custom reminder.")
                 )
             } else {
                 List {
-                    ForEach(dates) { date in
-                        dateRow(date)
+                    if !syllabusDates.isEmpty {
+                        Section("From Syllabus") {
+                            ForEach(syllabusDates) { date in
+                                dateRow(date)
+                                    .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                                        Button(role: .destructive) {
+                                            deleteReminder(date)
+                                        } label: {
+                                            Label("Delete", systemImage: "trash")
+                                        }
+                                    }
+                            }
+                        }
+                    }
+                    if !customReminders.isEmpty {
+                        Section("Custom") {
+                            ForEach(customReminders) { date in
+                                dateRow(date)
+                                    .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                                        Button(role: .destructive) {
+                                            deleteReminder(date)
+                                        } label: {
+                                            Label("Delete", systemImage: "trash")
+                                        }
+                                    }
+                            }
+                        }
                     }
                 }
             }
         }
         .navigationTitle("Reminders")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    showingAddReminder = true
+                } label: {
+                    Image(systemName: "plus")
+                }
+            }
+        }
+        .sheet(isPresented: $showingAddReminder) {
+            AddReminderView(classId: classId, classCode: classCode) {
+                customReminders = CustomReminderStore.shared.loadForClass(classId)
+                remindersVM.reminders = ReminderStore.shared.loadAll()
+            }
+        }
         .task {
             let vm = SyllabusUploadViewModel(classId: classId)
             syllabusVM = vm
             await vm.loadExistingSyllabus()
+            customReminders = CustomReminderStore.shared.loadForClass(classId)
             remindersVM.reminders = ReminderStore.shared.loadAll()
         }
         .alert("Notifications Disabled", isPresented: $remindersVM.permissionDenied) {
@@ -125,6 +172,15 @@ struct ClassRemindersView: View {
                 expandedDateId = expandedDateId == date.id ? nil : date.id
             }
         }
+    }
+
+    private func deleteReminder(_ date: ImportantDate) {
+        if date.id.hasPrefix("custom_") {
+            CustomReminderStore.shared.remove(id: date.id)
+            customReminders.removeAll { $0.id == date.id }
+        }
+        NotificationService.shared.cancelReminder(dateId: date.id)
+        remindersVM.reminders.removeValue(forKey: date.id)
     }
 
     private func formattedDateTime(_ dateString: String) -> String {
