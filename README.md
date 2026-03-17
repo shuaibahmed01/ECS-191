@@ -16,6 +16,7 @@ A mobile app for UC Davis students to manage their class schedules and communica
 - **Lecture Slides**: Upload lecture slides (PDF or photo); AI summarizes key concepts, definitions, formulas, and examples
 - **Flashcard Generation**: Auto-generate study flashcards from lecture slide summaries with an interactive flip-and-swipe study interface
 - **Course Agent**: Chat with an AI assistant that answers questions using your syllabus and lecture slides as context, with citation support
+- **Practice Exams**: AI-generated practice exams from lecture slides with multiple choice, short answer, or mixed (70/30 MC/SA) question types; automated grading with per-question feedback, score tracking, result persistence, and retake support
 - **Global Search**: Search across all enrolled classes — syllabus content and chat messages — from a single search bar
 - **File Attachments**: Upload images and PDFs in chat via Firebase Storage with signed URLs
 
@@ -27,7 +28,7 @@ A mobile app for UC Davis students to manage their class schedules and communica
 - **Database**: Firestore (courses, users, enrollments, chat messages, slides, and flashcards)
 - **Storage**: Firebase Storage (chat attachments, slide uploads)
 - **Real-Time Chat**: Firestore snapshot listeners (iOS reads directly from Firestore)
-- **AI**: Anthropic Claude API — claude-sonnet-4-20250514 (syllabus extraction, slide summarization, flashcard generation, and course agent)
+- **AI**: Anthropic Claude API — claude-sonnet-4-20250514 (syllabus extraction, slide summarization, flashcard generation, practice exam generation/grading, and course agent)
 
 ## Getting Started
 
@@ -130,6 +131,11 @@ All protected endpoints require header: `Authorization: Bearer <firebase_id_toke
 | DELETE | `/v1/classes/<id>/slides/<slide_id>` | Delete a slide entry |
 | POST | `/v1/classes/<id>/slides/<slide_id>/flashcards` | Generate flashcards from slide |
 | GET | `/v1/classes/<id>/slides/<slide_id>/flashcards` | Get generated flashcards |
+| POST | `/v1/classes/<id>/practice-exams` | Generate practice exam from slides |
+| GET | `/v1/classes/<id>/practice-exams` | List practice exams |
+| GET | `/v1/classes/<id>/practice-exams/<eid>` | Get exam with questions |
+| POST | `/v1/classes/<id>/practice-exams/<eid>/submit` | Submit answers for grading |
+| GET | `/v1/classes/<id>/practice-exams/<eid>/attempts` | List user's past attempts |
 | POST | `/v1/classes/<id>/agent/chat` | Send message to course agent |
 | GET | `/v1/classes/<id>/agent/history` | Get agent chat history |
 | POST | `/v1/uploads` | Upload file to Firebase Storage |
@@ -143,13 +149,13 @@ All protected endpoints require header: `Authorization: Bearer <firebase_id_toke
 │   │   ├── classes.py          # Class listing endpoints
 │   │   ├── users.py            # User & enrollment endpoints
 │   │   ├── chat.py             # Chat endpoints
-│   │   ├── syllabus.py         # Syllabus, slides, flashcards & course agent endpoints
+│   │   ├── syllabus.py         # Syllabus, slides, flashcards, practice exams & agent endpoints
 │   │   ├── uploads.py          # File upload to Firebase Storage
 │   │   └── search.py           # Global search across classes
 │   ├── services/
 │   │   ├── datastore_service.py  # Data layer
 │   │   ├── auth_service.py       # Firebase token verification
-│   │   └── syllabus_service.py   # Anthropic API, syllabus, slides & flashcard logic
+│   │   └── syllabus_service.py   # Anthropic API, syllabus, slides, flashcards & practice exams
 │   ├── main.py
 │   ├── .env                     # Environment variables (not committed)
 │   ├── tests/                   # Pytest test suite
@@ -157,9 +163,9 @@ All protected endpoints require header: `Authorization: Bearer <firebase_id_toke
 │
 └── ios/CourseHub/
     └── CourseHub/
-        ├── Models/             # Data models (incl. SlideEntry, Flashcard)
-        ├── ViewModels/         # Business logic (incl. SlidesViewModel)
-        ├── Views/              # SwiftUI views (incl. SlidesView, FlashcardStudyView, GlobalSearchView)
+        ├── Models/             # Data models (incl. SlideEntry, Flashcard, PracticeExam)
+        ├── ViewModels/         # Business logic (incl. SlidesViewModel, PracticeExamViewModel)
+        ├── Views/              # SwiftUI views (incl. SlidesView, FlashcardStudyView, PracticeExamsView)
         └── Networking/         # API client
 ```
 
