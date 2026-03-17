@@ -102,6 +102,9 @@ struct ClassDetailView: View {
                 navRow(icon: "sparkles", color: .purple, title: "Course Agent") {
                     CourseAgentView(classId: entry.id, classCode: entry.classCode)
                 }
+                navRow(icon: "doc.questionmark.fill", color: .indigo, title: "Practice Exams") {
+                    PracticeExamsView(classId: entry.id, classCode: entry.classCode)
+                }
             }
 
             // Remove

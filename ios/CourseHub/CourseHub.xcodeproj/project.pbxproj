@@ -52,6 +52,12 @@
 		A1000047 /* ThemeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000047 /* ThemeManager.swift */; };
 		A1000048 /* CustomReminderStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000048 /* CustomReminderStore.swift */; };
 		A1000049 /* AddReminderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000049 /* AddReminderView.swift */; };
+		A1000050 /* PracticeExam.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000050 /* PracticeExam.swift */; };
+		A1000051 /* PracticeExamViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000051 /* PracticeExamViewModel.swift */; };
+		A1000052 /* PracticeExamsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000052 /* PracticeExamsView.swift */; };
+		A1000053 /* CreatePracticeExamView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000053 /* CreatePracticeExamView.swift */; };
+		A1000054 /* TakePracticeExamView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000054 /* TakePracticeExamView.swift */; };
+		A1000055 /* ExamResultsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000055 /* ExamResultsView.swift */; };
 		CF68ADF02F3A00000018AC36 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = CF68ADEF2F3A00000018AC36 /* FirebaseFirestore */; };
 /* End PBXBuildFile section */
 
@@ -100,6 +106,12 @@
 		A2000047 /* ThemeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeManager.swift; sourceTree = "<group>"; };
 		A2000048 /* CustomReminderStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomReminderStore.swift; sourceTree = "<group>"; };
 		A2000049 /* AddReminderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddReminderView.swift; sourceTree = "<group>"; };
+		A2000050 /* PracticeExam.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PracticeExam.swift; sourceTree = "<group>"; };
+		A2000051 /* PracticeExamViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PracticeExamViewModel.swift; sourceTree = "<group>"; };
+		A2000052 /* PracticeExamsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PracticeExamsView.swift; sourceTree = "<group>"; };
+		A2000053 /* CreatePracticeExamView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreatePracticeExamView.swift; sourceTree = "<group>"; };
+		A2000054 /* TakePracticeExamView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TakePracticeExamView.swift; sourceTree = "<group>"; };
+		A2000055 /* ExamResultsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExamResultsView.swift; sourceTree = "<group>"; };
 		A3000001 /* CourseHub.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CourseHub.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -153,6 +165,7 @@
 				A2000030 /* Flashcard.swift */,
 				A2000040 /* ImportantDate.swift */,
 				A2000041 /* ReminderPreference.swift */,
+				A2000050 /* PracticeExam.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -168,6 +181,7 @@
 				A2000022 /* SyllabusUploadViewModel.swift */,
 				A2000023 /* CourseAgentViewModel.swift */,
 				A2000044 /* RemindersViewModel.swift */,
+				A2000051 /* PracticeExamViewModel.swift */,
 			);
 			path = ViewModels;
 			sourceTree = "<group>";
@@ -193,6 +207,10 @@
 				A2000045 /* UpcomingDatesView.swift */,
 				A2000046 /* ClassRemindersView.swift */,
 				A2000049 /* AddReminderView.swift */,
+				A2000052 /* PracticeExamsView.swift */,
+				A2000053 /* CreatePracticeExamView.swift */,
+				A2000054 /* TakePracticeExamView.swift */,
+				A2000055 /* ExamResultsView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -338,6 +356,12 @@
 				A1000047 /* ThemeManager.swift in Sources */,
 				A1000048 /* CustomReminderStore.swift in Sources */,
 				A1000049 /* AddReminderView.swift in Sources */,
+				A1000050 /* PracticeExam.swift in Sources */,
+				A1000051 /* PracticeExamViewModel.swift in Sources */,
+				A1000052 /* PracticeExamsView.swift in Sources */,
+				A1000053 /* CreatePracticeExamView.swift in Sources */,
+				A1000054 /* TakePracticeExamView.swift in Sources */,
+				A1000055 /* ExamResultsView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
