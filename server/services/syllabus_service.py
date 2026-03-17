@@ -557,3 +557,318 @@ def get_flashcards(class_id, slide_id):
     else:
         data["generated_at"] = ""
     return data
+
+
+# ── Practice exam generation ─────────────────────────────────────────────────
+
+
+def _format_timestamp(ts):
+    """Convert a Firestore timestamp to ISO string."""
+    if hasattr(ts, "isoformat"):
+        return ts.strftime("%Y-%m-%dT%H:%M:%SZ")
+    elif ts is not None:
+        return str(ts)
+    return ""
+
+
+def generate_practice_exam(class_id, slide_ids, title, description, question_count, question_type):
+    """
+    Generate a practice exam from selected slide summaries using Claude.
+
+    Returns:
+        list of question dicts
+    """
+    db = _get_db()
+    question_count = max(1, min(15, question_count))
+
+    # Fetch slide summaries
+    slide_texts = []
+    for sid in slide_ids:
+        doc = (
+            db.collection("slides")
+            .document(class_id)
+            .collection("entries")
+            .document(sid)
+            .get()
+        )
+        if doc.exists:
+            data = doc.to_dict()
+            slide_texts.append(f"--- {data.get('title', 'Untitled')} ---\n{data.get('summary', '')}")
+
+    if not slide_texts:
+        raise ValueError("No valid slides found for the given slide_ids")
+
+    material = "\n\n".join(slide_texts)
+
+    type_instruction = ""
+    if question_type == "multiple_choice":
+        type_instruction = "All questions must be multiple choice."
+    elif question_type == "short_answer":
+        type_instruction = "All questions must be short answer."
+    else:
+        mc_count = max(1, round(question_count * 0.7))
+        sa_count = question_count - mc_count
+        type_instruction = (
+            f"Include exactly {mc_count} multiple choice questions followed by "
+            f"exactly {sa_count} short answer questions. "
+            "Put ALL multiple choice questions first, then ALL short answer questions."
+        )
+
+    focus = ""
+    if description:
+        focus = f"\nFocus especially on: {description}"
+
+    prompt = f"""Generate a practice exam with exactly {question_count} questions based on lecture material.
+{type_instruction}{focus}
+
+Lecture Material:
+{material}
+
+Return ONLY a JSON array. Each object must follow one of these formats:
+- Multiple choice: {{"type":"multiple_choice","question":"...","options":["A","B","C","D"],"correct_answer":"B"}}
+- Short answer: {{"type":"short_answer","question":"...","expected_answer":"..."}}"""
+
+    client = _get_anthropic()
+    response = client.messages.create(
+        model=CLAUDE_MODEL,
+        max_tokens=4096,
+        messages=[{"role": "user", "content": prompt}],
+    )
+
+    response_text = response.content[0].text
+    if response_text.startswith("```"):
+        lines = response_text.split("\n")
+        lines = lines[1:-1]
+        response_text = "\n".join(lines)
+
+    questions = json.loads(response_text)
+    return questions
+
+
+def save_practice_exam(class_id, user_id, title, description, slide_ids, questions, question_type):
+    """
+    Write a practice exam to practice_exams/{class_id}/exams/{auto_id}.
+
+    Returns:
+        str: the auto-generated exam document ID
+    """
+    db = _get_db()
+    exams_ref = db.collection("practice_exams").document(class_id).collection("exams")
+    doc_ref = exams_ref.add({
+        "title": title,
+        "description": description or "",
+        "slide_ids": slide_ids,
+        "question_count": len(questions),
+        "question_type": question_type,
+        "questions": questions,
+        "created_by": user_id,
+        "created_at": firestore.SERVER_TIMESTAMP,
+    })
+    return doc_ref[1].id
+
+
+def get_practice_exams(class_id):
+    """
+    List all practice exams for a class (metadata only).
+
+    Returns:
+        list of dicts with id, title, description, question_count, question_type, created_at
+    """
+    db = _get_db()
+    exams_ref = (
+        db.collection("practice_exams")
+        .document(class_id)
+        .collection("exams")
+        .order_by("created_at")
+    )
+    docs = exams_ref.stream()
+
+    exams = []
+    for doc in docs:
+        data = doc.to_dict()
+        exams.append({
+            "id": doc.id,
+            "title": data.get("title", ""),
+            "description": data.get("description", ""),
+            "question_count": data.get("question_count", 0),
+            "question_type": data.get("question_type", "mixed"),
+            "created_at": _format_timestamp(data.get("created_at")),
+        })
+    return exams
+
+
+def get_practice_exam(class_id, exam_id):
+    """
+    Get a single practice exam with full questions.
+
+    Returns:
+        dict with all exam fields, or None if not found.
+    """
+    db = _get_db()
+    doc = (
+        db.collection("practice_exams")
+        .document(class_id)
+        .collection("exams")
+        .document(exam_id)
+        .get()
+    )
+    if not doc.exists:
+        return None
+    data = doc.to_dict()
+    data["id"] = doc.id
+    data["created_at"] = _format_timestamp(data.get("created_at"))
+    return data
+
+
+def grade_practice_exam(class_id, exam_id, user_id, answers):
+    """
+    Grade a practice exam submission.
+    MC: deterministic compare. SA: batch Claude call.
+    Saves attempt to Firestore.
+
+    Returns:
+        dict with score, total, per_question, feedback
+    """
+    db = _get_db()
+
+    exam = get_practice_exam(class_id, exam_id)
+    if not exam:
+        raise ValueError("Exam not found")
+
+    questions = exam.get("questions", [])
+    per_question = []
+    sa_to_grade = []
+
+    # Build answer lookup
+    answer_map = {}
+    for a in answers:
+        answer_map[a["question_index"]] = a["answer"]
+
+    # Grade MC deterministically, collect SA for Claude
+    for i, q in enumerate(questions):
+        student_answer = answer_map.get(i, "")
+        if q["type"] == "multiple_choice":
+            correct = student_answer.strip().upper() == q.get("correct_answer", "").strip().upper()
+            per_question.append({
+                "question_index": i,
+                "correct": correct,
+                "partial": False,
+                "explanation": "Correct!" if correct else f"The correct answer is {q.get('correct_answer', 'N/A')}.",
+            })
+        else:
+            # Short answer — queue for Claude grading
+            sa_to_grade.append({
+                "question_index": i,
+                "question": q["question"],
+                "expected_answer": q.get("expected_answer", ""),
+                "student_answer": student_answer,
+            })
+            per_question.append(None)  # placeholder
+
+    # Grade SA via Claude in one batch call
+    if sa_to_grade:
+        sa_prompt_parts = []
+        for item in sa_to_grade:
+            sa_prompt_parts.append(
+                f"Question {item['question_index']}: {item['question']}\n"
+                f"Expected: {item['expected_answer']}\n"
+                f"Student: {item['student_answer']}"
+            )
+
+        grading_prompt = f"""Grade these short-answer responses:
+{chr(10).join(sa_prompt_parts)}
+
+Return ONLY JSON:
+{{"grades":[{{"question_index":N,"correct":true/false,"partial":true/false,"explanation":"..."}}],
+ "feedback":"2-3 sentences on areas to improve."}}"""
+
+        client = _get_anthropic()
+        response = client.messages.create(
+            model=CLAUDE_MODEL,
+            max_tokens=2048,
+            messages=[{"role": "user", "content": grading_prompt}],
+        )
+
+        response_text = response.content[0].text
+        if response_text.startswith("```"):
+            lines = response_text.split("\n")
+            lines = lines[1:-1]
+            response_text = "\n".join(lines)
+
+        grading_result = json.loads(response_text)
+
+        # Fill in SA grades
+        for grade in grading_result.get("grades", []):
+            idx = grade["question_index"]
+            per_question[idx] = {
+                "question_index": idx,
+                "correct": grade.get("correct", False),
+                "partial": grade.get("partial", False),
+                "explanation": grade.get("explanation", ""),
+            }
+        feedback = grading_result.get("feedback", "")
+    else:
+        feedback = ""
+
+    # Calculate score
+    score = sum(1 for r in per_question if r and r.get("correct"))
+    total = len(questions)
+
+    results = {
+        "score": score,
+        "total": total,
+        "per_question": per_question,
+        "feedback": feedback,
+    }
+
+    # Save attempt
+    attempts_ref = (
+        db.collection("practice_exams")
+        .document(class_id)
+        .collection("exams")
+        .document(exam_id)
+        .collection("attempts")
+    )
+    attempts_ref.add({
+        "user_id": user_id,
+        "answers": answers,
+        "results": results,
+        "submitted_at": firestore.SERVER_TIMESTAMP,
+    })
+
+    return results
+
+
+def get_exam_attempts(class_id, exam_id, user_id):
+    """
+    Get all attempts for a user on a specific exam.
+
+    Returns:
+        list of attempt dicts
+    """
+    db = _get_db()
+    attempts_ref = (
+        db.collection("practice_exams")
+        .document(class_id)
+        .collection("exams")
+        .document(exam_id)
+        .collection("attempts")
+        .where("user_id", "==", user_id)
+    )
+    docs = attempts_ref.stream()
+
+    attempts = []
+    for doc in docs:
+        data = doc.to_dict()
+        ts = data.get("submitted_at")
+        attempts.append({
+            "id": doc.id,
+            "results": data.get("results", {}),
+            "submitted_at": _format_timestamp(ts),
+            "_ts": ts,
+        })
+    # Sort by timestamp in Python to avoid composite index requirement
+    attempts.sort(key=lambda a: a.get("_ts") or "", reverse=False)
+    for a in attempts:
+        a.pop("_ts", None)
+    return attempts
