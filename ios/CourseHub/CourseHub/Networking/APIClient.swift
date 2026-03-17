@@ -336,6 +336,59 @@ class APIClient {
         )
     }
 
+    // MARK: - Practice Exams
+
+    func createPracticeExam(
+        classId: String,
+        title: String,
+        slideIds: [String],
+        description: String,
+        questionCount: Int,
+        questionType: String
+    ) async throws -> PracticeExamResponse {
+        let payload: [String: Any] = [
+            "title": title,
+            "slide_ids": slideIds,
+            "description": description,
+            "question_count": questionCount,
+            "question_type": questionType,
+        ]
+        let body = try JSONSerialization.data(withJSONObject: payload, options: [])
+        return try await request(
+            endpoint: "/classes/\(classId)/practice-exams",
+            method: "POST",
+            body: body
+        )
+    }
+
+    func getPracticeExams(classId: String) async throws -> PracticeExamListResponse {
+        return try await request(
+            endpoint: "/classes/\(classId)/practice-exams"
+        )
+    }
+
+    func getPracticeExam(classId: String, examId: String) async throws -> PracticeExamResponse {
+        return try await request(
+            endpoint: "/classes/\(classId)/practice-exams/\(examId)"
+        )
+    }
+
+    func submitPracticeExam(classId: String, examId: String, answers: [[String: Any]]) async throws -> ExamGradeResponse {
+        let payload: [String: Any] = ["answers": answers]
+        let body = try JSONSerialization.data(withJSONObject: payload, options: [])
+        return try await request(
+            endpoint: "/classes/\(classId)/practice-exams/\(examId)/submit",
+            method: "POST",
+            body: body
+        )
+    }
+
+    func getExamAttempts(classId: String, examId: String) async throws -> ExamAttemptsResponse {
+        return try await request(
+            endpoint: "/classes/\(classId)/practice-exams/\(examId)/attempts"
+        )
+    }
+
     func deleteSlide(classId: String, slideId: String) async throws {
         guard let url = URL(string: "\(baseURL)/classes/\(classId)/slides/\(slideId)") else {
             throw APIError.invalidURL
