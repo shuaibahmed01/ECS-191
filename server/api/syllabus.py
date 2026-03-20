@@ -70,7 +70,7 @@ def upload_syllabus(class_id):
     except Exception as e:
         import traceback
         traceback.print_exc()
-        return jsonify({"error": f"Failed to process syllabus: {str(e)}"}), 500
+        return jsonify({"error": "Failed to process syllabus. Please try again later."}), 500
 
     context = get_syllabus_context(class_id)
     return jsonify({"syllabus": context}), 201
@@ -80,42 +80,51 @@ def upload_syllabus(class_id):
 @require_auth
 def update_syllabus(class_id):
     """Update specific syllabus fields. Requires auth + enrollment."""
-    if not is_user_enrolled(g.user_id, class_id):
-        return jsonify({"error": "Not enrolled in this class"}), 403
+    try:
+        if not is_user_enrolled(g.user_id, class_id):
+            return jsonify({"error": "Not enrolled in this class"}), 403
 
-    # Ensure syllabus exists before allowing edits
-    existing = get_syllabus_context(class_id)
-    if not existing:
-        return jsonify({"error": "No syllabus uploaded for this class"}), 404
+        existing = get_syllabus_context(class_id)
+        if not existing:
+            return jsonify({"error": "No syllabus uploaded for this class"}), 404
 
-    data = request.get_json()
-    if not data:
-        return jsonify({"error": "Request body is required"}), 400
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "Request body is required"}), 400
 
-    allowed_fields = {"instructor", "office_hours", "grading_policy", "important_dates", "course_policies"}
-    updates = {k: v for k, v in data.items() if k in allowed_fields and isinstance(v, str)}
+        allowed_fields = {"instructor", "office_hours", "grading_policy", "important_dates", "course_policies"}
+        updates = {k: v for k, v in data.items() if k in allowed_fields and isinstance(v, str)}
 
-    if not updates:
-        return jsonify({"error": "No valid fields to update"}), 400
+        if not updates:
+            return jsonify({"error": "No valid fields to update"}), 400
 
-    update_syllabus_context(class_id, g.user_id, updates)
+        update_syllabus_context(class_id, g.user_id, updates)
 
-    context = get_syllabus_context(class_id)
-    return jsonify({"syllabus": context})
+        context = get_syllabus_context(class_id)
+        return jsonify({"syllabus": context})
+    except Exception:
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": "Unable to update syllabus. Please try again later."}), 500
 
 
 @syllabus_bp.route("/classes/<class_id>/syllabus", methods=["GET"])
 @require_auth
 def get_syllabus(class_id):
     """Get extracted syllabus context. Requires auth + enrollment."""
-    if not is_user_enrolled(g.user_id, class_id):
-        return jsonify({"error": "Not enrolled in this class"}), 403
+    try:
+        if not is_user_enrolled(g.user_id, class_id):
+            return jsonify({"error": "Not enrolled in this class"}), 403
 
-    context = get_syllabus_context(class_id)
-    if not context:
-        return jsonify({"error": "No syllabus uploaded for this class"}), 404
+        context = get_syllabus_context(class_id)
+        if not context:
+            return jsonify({"error": "No syllabus uploaded for this class"}), 404
 
-    return jsonify({"syllabus": context})
+        return jsonify({"syllabus": context})
+    except Exception:
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": "Unable to load syllabus. Please try again later."}), 500
 
 
 @syllabus_bp.route("/classes/<class_id>/agent/chat", methods=["POST"])
@@ -141,7 +150,7 @@ def agent_chat(class_id):
     except Exception as e:
         import traceback
         traceback.print_exc()
-        return jsonify({"error": f"Agent error: {str(e)}"}), 500
+        return jsonify({"error": "The course agent is temporarily unavailable. Please try again later."}), 500
 
     # Append new messages to history and save
     history.append({"role": "user", "content": message})
@@ -155,11 +164,16 @@ def agent_chat(class_id):
 @require_auth
 def agent_history(class_id):
     """Get agent chat history. Requires auth + enrollment."""
-    if not is_user_enrolled(g.user_id, class_id):
-        return jsonify({"error": "Not enrolled in this class"}), 403
+    try:
+        if not is_user_enrolled(g.user_id, class_id):
+            return jsonify({"error": "Not enrolled in this class"}), 403
 
-    history = get_agent_chat_history(class_id, g.user_id)
-    return jsonify({"messages": history})
+        history = get_agent_chat_history(class_id, g.user_id)
+        return jsonify({"messages": history})
+    except Exception:
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": "Unable to load chat history. Please try again later."}), 500
 
 
 # ── Slides endpoints ──────────────────────────────────────────────────────────
@@ -199,7 +213,7 @@ def upload_slides(class_id):
     except Exception as e:
         import traceback
         traceback.print_exc()
-        return jsonify({"error": f"Failed to process slides: {str(e)}"}), 500
+        return jsonify({"error": "Failed to process slides. Please try again later."}), 500
 
     return jsonify({
         "slide": {
@@ -216,22 +230,32 @@ def upload_slides(class_id):
 @require_auth
 def list_slides(class_id):
     """List all slide summaries for a class. Requires auth + enrollment."""
-    if not is_user_enrolled(g.user_id, class_id):
-        return jsonify({"error": "Not enrolled in this class"}), 403
+    try:
+        if not is_user_enrolled(g.user_id, class_id):
+            return jsonify({"error": "Not enrolled in this class"}), 403
 
-    slides = get_slides(class_id)
-    return jsonify({"slides": slides})
+        slides = get_slides(class_id)
+        return jsonify({"slides": slides})
+    except Exception:
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": "Unable to load slides. Please try again later."}), 500
 
 
 @syllabus_bp.route("/classes/<class_id>/slides/<slide_id>", methods=["DELETE"])
 @require_auth
 def remove_slide(class_id, slide_id):
     """Delete a slide entry. Requires auth + enrollment."""
-    if not is_user_enrolled(g.user_id, class_id):
-        return jsonify({"error": "Not enrolled in this class"}), 403
+    try:
+        if not is_user_enrolled(g.user_id, class_id):
+            return jsonify({"error": "Not enrolled in this class"}), 403
 
-    delete_slide(class_id, slide_id)
-    return jsonify({"message": "Slide deleted"})
+        delete_slide(class_id, slide_id)
+        return jsonify({"message": "Slide deleted"})
+    except Exception:
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": "Unable to delete slide. Please try again later."}), 500
 
 
 # ── Flashcard endpoints ───────────────────────────────────────────────────────
@@ -257,7 +281,7 @@ def create_flashcards(class_id, slide_id):
     except Exception as e:
         import traceback
         traceback.print_exc()
-        return jsonify({"error": f"Failed to generate flashcards: {str(e)}"}), 500
+        return jsonify({"error": "Failed to generate flashcards. Please try again later."}), 500
 
     data = get_flashcards(class_id, slide_id)
     return jsonify({"flashcards": data}), 201
@@ -267,14 +291,19 @@ def create_flashcards(class_id, slide_id):
 @require_auth
 def fetch_flashcards(class_id, slide_id):
     """Fetch existing flashcards for a slide."""
-    if not is_user_enrolled(g.user_id, class_id):
-        return jsonify({"error": "Not enrolled in this class"}), 403
+    try:
+        if not is_user_enrolled(g.user_id, class_id):
+            return jsonify({"error": "Not enrolled in this class"}), 403
 
-    data = get_flashcards(class_id, slide_id)
-    if not data:
-        return jsonify({"error": "No flashcards generated for this slide"}), 404
+        data = get_flashcards(class_id, slide_id)
+        if not data:
+            return jsonify({"error": "No flashcards generated for this slide"}), 404
 
-    return jsonify({"flashcards": data})
+        return jsonify({"flashcards": data})
+    except Exception:
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": "Unable to load flashcards. Please try again later."}), 500
 
 
 # ── Practice exam endpoints ──────────────────────────────────────────────────
@@ -315,7 +344,7 @@ def create_practice_exam(class_id):
     except Exception as e:
         import traceback
         traceback.print_exc()
-        return jsonify({"error": f"Failed to generate practice exam: {str(e)}"}), 500
+        return jsonify({"error": "Failed to generate practice exam. Please try again later."}), 500
 
     exam = get_practice_exam(class_id, exam_id)
     return jsonify({"exam": exam}), 201
@@ -325,25 +354,35 @@ def create_practice_exam(class_id):
 @require_auth
 def list_practice_exams(class_id):
     """List all practice exams for a class."""
-    if not is_user_enrolled(g.user_id, class_id):
-        return jsonify({"error": "Not enrolled in this class"}), 403
+    try:
+        if not is_user_enrolled(g.user_id, class_id):
+            return jsonify({"error": "Not enrolled in this class"}), 403
 
-    exams = get_practice_exams(class_id)
-    return jsonify({"exams": exams})
+        exams = get_practice_exams(class_id)
+        return jsonify({"exams": exams})
+    except Exception:
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": "Unable to load practice exams. Please try again later."}), 500
 
 
 @syllabus_bp.route("/classes/<class_id>/practice-exams/<exam_id>", methods=["GET"])
 @require_auth
 def fetch_practice_exam(class_id, exam_id):
     """Get a single practice exam with questions."""
-    if not is_user_enrolled(g.user_id, class_id):
-        return jsonify({"error": "Not enrolled in this class"}), 403
+    try:
+        if not is_user_enrolled(g.user_id, class_id):
+            return jsonify({"error": "Not enrolled in this class"}), 403
 
-    exam = get_practice_exam(class_id, exam_id)
-    if not exam:
-        return jsonify({"error": "Exam not found"}), 404
+        exam = get_practice_exam(class_id, exam_id)
+        if not exam:
+            return jsonify({"error": "Exam not found"}), 404
 
-    return jsonify({"exam": exam})
+        return jsonify({"exam": exam})
+    except Exception:
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": "Unable to load practice exam. Please try again later."}), 500
 
 
 @syllabus_bp.route("/classes/<class_id>/practice-exams/<exam_id>/submit", methods=["POST"])
@@ -368,7 +407,7 @@ def submit_practice_exam(class_id, exam_id):
     except Exception as e:
         import traceback
         traceback.print_exc()
-        return jsonify({"error": f"Failed to grade exam: {str(e)}"}), 500
+        return jsonify({"error": "Failed to grade exam. Please try again later."}), 500
 
     return jsonify({"results": results})
 
@@ -377,8 +416,13 @@ def submit_practice_exam(class_id, exam_id):
 @require_auth
 def list_exam_attempts(class_id, exam_id):
     """List a user's past attempts for an exam."""
-    if not is_user_enrolled(g.user_id, class_id):
-        return jsonify({"error": "Not enrolled in this class"}), 403
+    try:
+        if not is_user_enrolled(g.user_id, class_id):
+            return jsonify({"error": "Not enrolled in this class"}), 403
 
-    attempts = get_exam_attempts(class_id, exam_id, g.user_id)
-    return jsonify({"attempts": attempts})
+        attempts = get_exam_attempts(class_id, exam_id, g.user_id)
+        return jsonify({"attempts": attempts})
+    except Exception:
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": "Unable to load exam attempts. Please try again later."}), 500

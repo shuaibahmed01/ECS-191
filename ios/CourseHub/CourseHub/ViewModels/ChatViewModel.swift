@@ -43,8 +43,8 @@ class ChatViewModel {
             guard let self else { return }
             self.isLoading = false
 
-            if let error {
-                self.errorMessage = error.localizedDescription
+            if error != nil {
+                self.errorMessage = "Unable to load messages. Please try again later."
                 return
             }
 
@@ -76,7 +76,7 @@ class ChatViewModel {
             )
             messageText = ""
         } catch {
-            errorMessage = error.localizedDescription
+            errorMessage = (error as? APIError)?.localizedDescription ?? "Something went wrong. Please try again later."
         }
 
         isSending = false
@@ -101,7 +101,7 @@ class ChatViewModel {
                 attachmentType: "link"
             )
         } catch {
-            errorMessage = error.localizedDescription
+            errorMessage = (error as? APIError)?.localizedDescription ?? "Something went wrong. Please try again later."
         }
         isSending = false
     }
@@ -120,7 +120,7 @@ class ChatViewModel {
                 attachmentType: mimeToType(upload.type)
             )
         } catch {
-            errorMessage = error.localizedDescription
+            errorMessage = (error as? APIError)?.localizedDescription ?? "Something went wrong. Please try again later."
         }
         isSending = false
     }

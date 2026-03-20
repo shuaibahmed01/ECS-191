@@ -29,7 +29,7 @@ class SlidesViewModel {
                 await loadFlashcards(for: slide.id)
             }
         } catch {
-            errorMessage = error.localizedDescription
+            errorMessage = (error as? APIError)?.localizedDescription ?? "Something went wrong. Please try again later."
         }
 
         isLoading = false
@@ -42,7 +42,7 @@ class SlidesViewModel {
             let response = try await APIClient.shared.generateFlashcards(classId: classId, slideId: slideId)
             flashcardsBySlideId[slideId] = response.flashcards.cards
         } catch {
-            errorMessage = error.localizedDescription
+            errorMessage = (error as? APIError)?.localizedDescription ?? "Something went wrong. Please try again later."
         }
         isGeneratingFlashcards.remove(slideId)
     }
@@ -79,7 +79,7 @@ class SlidesViewModel {
             try await APIClient.shared.deleteSlide(classId: classId, slideId: id)
             slides.removeAll { $0.id == id }
         } catch {
-            errorMessage = error.localizedDescription
+            errorMessage = (error as? APIError)?.localizedDescription ?? "Something went wrong. Please try again later."
         }
     }
 
@@ -97,7 +97,7 @@ class SlidesViewModel {
             )
             slides.append(response.slide)
         } catch {
-            errorMessage = error.localizedDescription
+            errorMessage = (error as? APIError)?.localizedDescription ?? "Something went wrong. Please try again later."
         }
 
         isUploading = false

@@ -14,7 +14,7 @@ class MyScheduleViewModel {
         do {
             enrolledClasses = try await APIClient.shared.fetchMyClasses()
         } catch {
-            errorMessage = error.localizedDescription
+            errorMessage = (error as? APIError)?.localizedDescription ?? "Something went wrong. Please try again later."
         }
 
         isLoading = false
@@ -28,7 +28,7 @@ class MyScheduleViewModel {
             try await APIClient.shared.unenroll(enrollmentId: enrollmentId)
             enrolledClasses.removeAll { $0.enrollmentId == enrollmentId }
         } catch {
-            errorMessage = error.localizedDescription
+            errorMessage = (error as? APIError)?.localizedDescription ?? "Something went wrong. Please try again later."
         }
     }
 }

@@ -12,24 +12,30 @@ enum APIError: Error, LocalizedError {
     var errorDescription: String? {
         switch self {
         case .invalidURL:
-            return "Invalid URL"
+            return "Something went wrong. Please try again later."
         case .invalidResponse:
-            return "Invalid response from server"
+            return "Something went wrong. Please try again later."
         case .httpError(let code):
-            if code == 409 {
-                return "Already enrolled in this class"
-            } else if code == 401 {
-                return "Not authenticated. Please sign in again."
-            } else if code == 403 {
-                return "Access denied"
+            switch code {
+            case 401:
+                return "Your session has expired. Please sign in again."
+            case 403:
+                return "You don't have access to this resource."
+            case 404:
+                return "The requested content could not be found."
+            case 409:
+                return "Already enrolled in this class."
+            case 422:
+                return "The uploaded file could not be processed. Please check the file and try again."
+            default:
+                return "Something went wrong. Please try again later."
             }
-            return "HTTP error: \(code)"
-        case .decodingError(let error):
-            return "Failed to decode response: \(error.localizedDescription)"
-        case .networkError(let error):
-            return "Network error: \(error.localizedDescription)"
+        case .decodingError:
+            return "Something went wrong. Please try again later."
+        case .networkError:
+            return "Unable to connect. Please check your internet connection and try again."
         case .notAuthenticated:
-            return "Not authenticated. Please sign in."
+            return "Please sign in to continue."
         }
     }
 }
@@ -166,7 +172,12 @@ class APIClient {
         let token = try await getAuthToken()
         urlRequest.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
 
-        let (_, response) = try await URLSession.shared.data(for: urlRequest)
+        let (_, response): (Data, URLResponse)
+        do {
+            (_, response) = try await URLSession.shared.data(for: urlRequest)
+        } catch {
+            throw APIError.networkError(error)
+        }
 
         guard let httpResponse = response as? HTTPURLResponse else {
             throw APIError.invalidResponse
@@ -401,7 +412,12 @@ class APIClient {
         let token = try await getAuthToken()
         urlRequest.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
 
-        let (_, response) = try await URLSession.shared.data(for: urlRequest)
+        let (_, response): (Data, URLResponse)
+        do {
+            (_, response) = try await URLSession.shared.data(for: urlRequest)
+        } catch {
+            throw APIError.networkError(error)
+        }
 
         guard let httpResponse = response as? HTTPURLResponse else {
             throw APIError.invalidResponse
@@ -431,7 +447,12 @@ class APIClient {
         urlRequest.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         urlRequest.httpBody = body
 
-        let (_, response) = try await URLSession.shared.data(for: urlRequest)
+        let (_, response): (Data, URLResponse)
+        do {
+            (_, response) = try await URLSession.shared.data(for: urlRequest)
+        } catch {
+            throw APIError.networkError(error)
+        }
 
         guard let httpResponse = response as? HTTPURLResponse else {
             throw APIError.invalidResponse

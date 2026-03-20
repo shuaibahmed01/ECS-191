@@ -52,7 +52,7 @@ class RemindersViewModel {
             allDates = dates
             reminders = ReminderStore.shared.loadAll()
         } catch {
-            errorMessage = error.localizedDescription
+            errorMessage = (error as? APIError)?.localizedDescription ?? "Something went wrong. Please try again later."
         }
         isLoading = false
     }

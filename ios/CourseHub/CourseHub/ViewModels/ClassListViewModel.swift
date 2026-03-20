@@ -25,7 +25,7 @@ class ClassListViewModel {
         do {
             allClasses = try await APIClient.shared.fetchClasses()
         } catch {
-            errorMessage = error.localizedDescription
+            errorMessage = (error as? APIError)?.localizedDescription ?? "Something went wrong. Please try again later."
         }
 
         isLoading = false
@@ -38,7 +38,7 @@ class ClassListViewModel {
         do {
             _ = try await APIClient.shared.enrollInClass(classId: classId)
         } catch {
-            errorMessage = error.localizedDescription
+            errorMessage = (error as? APIError)?.localizedDescription ?? "Something went wrong. Please try again later."
         }
     }
 }

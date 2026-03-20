@@ -16,38 +16,45 @@ chat_bp = Blueprint("chat", __name__)
 @require_auth
 def get_messages(class_id):
     """Get all messages for a class. Requires authentication and enrollment."""
-    # Check if user is enrolled in the class
-    if not is_user_enrolled(g.user_id, class_id):
-        return jsonify({"error": "Not enrolled in this class"}), 403
+    try:
+        if not is_user_enrolled(g.user_id, class_id):
+            return jsonify({"error": "Not enrolled in this class"}), 403
 
-    messages = get_messages_for_class(class_id)
-    return jsonify({"messages": messages})
+        messages = get_messages_for_class(class_id)
+        return jsonify({"messages": messages})
+    except Exception:
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": "Unable to load messages. Please try again later."}), 500
 
 
 @chat_bp.route("/classes/<class_id>/messages", methods=["POST"])
 @require_auth
 def post_message(class_id):
     """Post a new message to a class chat. Requires authentication and enrollment."""
-    # Check if user is enrolled in the class
-    if not is_user_enrolled(g.user_id, class_id):
-        return jsonify({"error": "Not enrolled in this class"}), 403
+    try:
+        if not is_user_enrolled(g.user_id, class_id):
+            return jsonify({"error": "Not enrolled in this class"}), 403
 
-    data = request.get_json()
+        data = request.get_json()
 
-    if not data:
-        return jsonify({"error": "Request body is required"}), 400
+        if not data:
+            return jsonify({"error": "Request body is required"}), 400
 
-    content = data.get("content")
-    attachment_url = data.get("attachment_url")
-    attachment_type = data.get("attachment_type")
+        content = data.get("content")
+        attachment_url = data.get("attachment_url")
+        attachment_type = data.get("attachment_type")
 
-    if not content and not attachment_url:
-        return jsonify({"error": "content or attachment_url is required"}), 400
+        if not content and not attachment_url:
+            return jsonify({"error": "content or attachment_url is required"}), 400
 
-    # Get sender info from authenticated user
-    sender_id = g.user_id
-    user = get_user_by_id(sender_id)
-    sender_name = user["display_name"] if user else g.user_name or "Unknown"
+        sender_id = g.user_id
+        user = get_user_by_id(sender_id)
+        sender_name = user["display_name"] if user else g.user_name or "Unknown"
 
-    message = create_message(class_id, sender_id, sender_name, content, attachment_url, attachment_type)
-    return jsonify(message), 201
+        message = create_message(class_id, sender_id, sender_name, content, attachment_url, attachment_type)
+        return jsonify(message), 201
+    except Exception:
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": "Unable to send message. Please try again later."}), 500

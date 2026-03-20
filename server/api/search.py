@@ -22,6 +22,15 @@ def global_search():
         q: search query (required)
         types: comma-separated list among ['syllabus','chat'] (optional; default both)
     """
+    try:
+        return _do_global_search()
+    except Exception:
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": "Search is temporarily unavailable. Please try again later."}), 500
+
+
+def _do_global_search():
     q = (request.args.get("q") or "").strip()
     if not q:
         return jsonify({"error": "q is required"}), 400

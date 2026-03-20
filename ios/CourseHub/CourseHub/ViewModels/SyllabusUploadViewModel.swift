@@ -26,10 +26,10 @@ class SyllabusUploadViewModel {
                 // No syllabus yet — that's fine
                 hasExistingSyllabus = false
             } else {
-                errorMessage = error.localizedDescription
+                errorMessage = (error as? APIError)?.localizedDescription ?? "Something went wrong. Please try again later."
             }
         } catch {
-            errorMessage = error.localizedDescription
+            errorMessage = (error as? APIError)?.localizedDescription ?? "Something went wrong. Please try again later."
         }
     }
 
@@ -61,7 +61,7 @@ class SyllabusUploadViewModel {
             )
             syllabusContext = response.syllabus
         } catch {
-            errorMessage = error.localizedDescription
+            errorMessage = (error as? APIError)?.localizedDescription ?? "Something went wrong. Please try again later."
         }
 
         isSaving = false
@@ -81,7 +81,7 @@ class SyllabusUploadViewModel {
             syllabusContext = response.syllabus
             hasExistingSyllabus = true
         } catch {
-            errorMessage = error.localizedDescription
+            errorMessage = (error as? APIError)?.localizedDescription ?? "Something went wrong. Please try again later."
         }
 
         isProcessing = false

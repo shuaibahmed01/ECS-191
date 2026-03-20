@@ -36,16 +36,14 @@ class AuthViewModel {
         do {
             let result = try await Auth.auth().createUser(withEmail: email, password: password)
 
-            // Set display name
             let changeRequest = result.user.createProfileChangeRequest()
             changeRequest.displayName = displayName
             try await changeRequest.commitChanges()
 
-            // Register user with backend
             await registerUserWithBackend(user: result.user, displayName: displayName)
         } catch {
             await MainActor.run {
-                self.errorMessage = error.localizedDescription
+                self.errorMessage = Self.friendlyAuthError(error)
             }
         }
     }
@@ -56,14 +54,13 @@ class AuthViewModel {
         do {
             let result = try await Auth.auth().signIn(withEmail: email, password: password)
 
-            // Sync user info with backend
             await registerUserWithBackend(
                 user: result.user,
                 displayName: result.user.displayName ?? ""
             )
         } catch {
             await MainActor.run {
-                self.errorMessage = error.localizedDescription
+                self.errorMessage = Self.friendlyAuthError(error)
             }
         }
     }
@@ -72,7 +69,7 @@ class AuthViewModel {
         do {
             try Auth.auth().signOut()
         } catch {
-            errorMessage = error.localizedDescription
+            errorMessage = "Unable to sign out. Please try again."
         }
     }
 
@@ -83,13 +80,12 @@ class AuthViewModel {
             try await Auth.auth().sendPasswordReset(withEmail: email)
         } catch {
             await MainActor.run {
-                self.errorMessage = error.localizedDescription
+                self.errorMessage = Self.friendlyAuthError(error)
             }
         }
     }
 
     private func registerUserWithBackend(user: User, displayName: String) async {
-        // Register the new user with our backend
         do {
             try await APIClient.shared.registerUser(
                 uid: user.uid,
@@ -97,7 +93,36 @@ class AuthViewModel {
                 displayName: displayName
             )
         } catch {
+            // Backend registration failed — not blocking for the user,
+            // but log for debugging. It will re-sync on next sign-in.
             print("Failed to register user with backend: \(error)")
+        }
+    }
+
+    private static func friendlyAuthError(_ error: Error) -> String {
+        let nsError = error as NSError
+        guard nsError.domain == AuthErrorDomain else {
+            return "Something went wrong. Please try again later."
+        }
+        switch AuthErrorCode(rawValue: nsError.code) {
+        case .invalidEmail:
+            return "Please enter a valid email address."
+        case .emailAlreadyInUse:
+            return "An account with this email already exists."
+        case .weakPassword:
+            return "Password is too weak. Please use at least 6 characters."
+        case .wrongPassword, .invalidCredential:
+            return "Incorrect email or password."
+        case .userNotFound:
+            return "No account found with this email."
+        case .userDisabled:
+            return "This account has been disabled."
+        case .tooManyRequests:
+            return "Too many attempts. Please try again later."
+        case .networkError:
+            return "Unable to connect. Please check your internet connection."
+        default:
+            return "Something went wrong. Please try again later."
         }
     }
 }

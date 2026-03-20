@@ -10,9 +10,14 @@ classes_bp = Blueprint("classes", __name__)
 @classes_bp.route("/classes", methods=["GET"])
 def list_classes():
     """List all classes, with optional search query. No auth required."""
-    query = request.args.get("q", "")
-    classes = get_all_classes(query)
-    return jsonify({"classes": classes})
+    try:
+        query = request.args.get("q", "")
+        classes = get_all_classes(query)
+        return jsonify({"classes": classes})
+    except Exception:
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": "Unable to load classes. Please try again later."}), 500
 
 
 @classes_bp.route("/classes", methods=["POST"])
@@ -39,13 +44,20 @@ def create_custom_class():
     except ValueError as e:
         return jsonify({"error": str(e)}), 400
     except Exception as e:
-        return jsonify({"error": f"Failed to create class: {e}"}), 500
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": "Failed to create class. Please try again later."}), 500
 
 
 @classes_bp.route("/classes/<class_id>", methods=["GET"])
 def get_class(class_id):
     """Get a single class by ID. No auth required."""
-    class_data = get_class_by_id(class_id)
-    if not class_data:
-        return jsonify({"error": "Class not found"}), 404
-    return jsonify(class_data)
+    try:
+        class_data = get_class_by_id(class_id)
+        if not class_data:
+            return jsonify({"error": "Class not found"}), 404
+        return jsonify(class_data)
+    except Exception:
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": "Unable to load class. Please try again later."}), 500

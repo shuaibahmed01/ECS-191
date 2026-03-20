@@ -45,11 +45,16 @@ def upload_file():
     ext = ALLOWED_TYPES[file_type]
     filename = f"chat_attachments/{uuid.uuid4().hex}{ext}"
 
-    bucket = storage.bucket()
-    blob = bucket.blob(filename)
-    blob.upload_from_string(file_bytes, content_type=file_type)
+    try:
+        bucket = storage.bucket()
+        blob = bucket.blob(filename)
+        blob.upload_from_string(file_bytes, content_type=file_type)
 
-    # Generate a signed URL that lasts 7 days
-    url = blob.generate_signed_url(expiration=timedelta(days=7))
+        # Generate a signed URL that lasts 7 days
+        url = blob.generate_signed_url(expiration=timedelta(days=7))
+    except Exception:
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": "Failed to upload file. Please try again later."}), 500
 
     return jsonify({"url": url, "type": file_type}), 201

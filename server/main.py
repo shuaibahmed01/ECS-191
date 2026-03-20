@@ -28,6 +28,27 @@ def create_app():
     app.register_blueprint(search_bp, url_prefix="/v1")
     app.register_blueprint(uploads_bp, url_prefix="/v1")
 
+    # ── Global error handlers ────────────────────────────────────────────────
+    @app.errorhandler(404)
+    def not_found(e):
+        return jsonify({"error": "The requested resource was not found."}), 404
+
+    @app.errorhandler(405)
+    def method_not_allowed(e):
+        return jsonify({"error": "Method not allowed."}), 405
+
+    @app.errorhandler(500)
+    def internal_error(e):
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": "Something went wrong. Please try again later."}), 500
+
+    @app.errorhandler(Exception)
+    def handle_unexpected_error(e):
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": "Something went wrong. Please try again later."}), 500
+
     @app.route("/health", methods=["GET"])
     def health():
         """Health check endpoint."""

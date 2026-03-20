@@ -26,7 +26,7 @@ class PracticeExamViewModel {
             let response = try await APIClient.shared.getPracticeExams(classId: classId)
             exams = response.exams
         } catch {
-            errorMessage = error.localizedDescription
+            errorMessage = (error as? APIError)?.localizedDescription ?? "Something went wrong. Please try again later."
         }
 
         isLoading = false
@@ -56,7 +56,7 @@ class PracticeExamViewModel {
             // Refresh list
             await loadExams()
         } catch {
-            errorMessage = error.localizedDescription
+            errorMessage = (error as? APIError)?.localizedDescription ?? "Something went wrong. Please try again later."
         }
 
         isGenerating = false
@@ -71,7 +71,7 @@ class PracticeExamViewModel {
             let response = try await APIClient.shared.getPracticeExam(classId: classId, examId: examId)
             currentExam = response.exam
         } catch {
-            errorMessage = error.localizedDescription
+            errorMessage = (error as? APIError)?.localizedDescription ?? "Something went wrong. Please try again later."
         }
 
         // Don't set isLoading = false here — let loadExamWithAttempts handle it
@@ -102,7 +102,7 @@ class PracticeExamViewModel {
             )
             latestResults = response.results
         } catch {
-            errorMessage = error.localizedDescription
+            errorMessage = (error as? APIError)?.localizedDescription ?? "Something went wrong. Please try again later."
         }
 
         isGrading = false

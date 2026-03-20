@@ -27,7 +27,7 @@ class CourseAgentViewModel {
                 AgentMessage(role: msg.role, content: msg.content, citations: msg.citations ?? [])
             }
         } catch {
-            errorMessage = error.localizedDescription
+            errorMessage = (error as? APIError)?.localizedDescription ?? "Something went wrong. Please try again later."
         }
 
         isLoading = false
@@ -65,7 +65,7 @@ class CourseAgentViewModel {
             let agentMessage = AgentMessage(role: "assistant", content: response.response, citations: response.citations ?? [])
             messages.append(agentMessage)
         } catch {
-            errorMessage = error.localizedDescription
+            errorMessage = (error as? APIError)?.localizedDescription ?? "Something went wrong. Please try again later."
             // Remove the optimistic user message on failure
             if messages.last?.id == userMessage.id {
                 messages.removeLast()
