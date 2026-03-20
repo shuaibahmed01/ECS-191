@@ -21,15 +21,17 @@ class SyllabusUploadViewModel {
             let response = try await APIClient.shared.getSyllabusContext(classId: classId)
             syllabusContext = response.syllabus
             hasExistingSyllabus = true
+        } catch is CancellationError {
         } catch let error as APIError {
             if case .httpError(404) = error {
-                // No syllabus yet — that's fine
                 hasExistingSyllabus = false
-            } else {
-                errorMessage = (error as? APIError)?.localizedDescription ?? "Something went wrong. Please try again later."
+            } else if !Task.isCancelled {
+                errorMessage = error.localizedDescription
             }
         } catch {
-            errorMessage = (error as? APIError)?.localizedDescription ?? "Something went wrong. Please try again later."
+            if !Task.isCancelled {
+                errorMessage = "Something went wrong. Please try again later."
+            }
         }
     }
 

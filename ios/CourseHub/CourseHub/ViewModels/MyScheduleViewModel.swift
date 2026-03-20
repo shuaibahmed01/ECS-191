@@ -13,8 +13,12 @@ class MyScheduleViewModel {
 
         do {
             enrolledClasses = try await APIClient.shared.fetchMyClasses()
+        } catch is CancellationError {
+            // Task was cancelled (e.g. view disappeared or refresh interrupted) — ignore
         } catch {
-            errorMessage = (error as? APIError)?.localizedDescription ?? "Something went wrong. Please try again later."
+            if !Task.isCancelled {
+                errorMessage = (error as? APIError)?.localizedDescription ?? "Something went wrong. Please try again later."
+            }
         }
 
         isLoading = false
@@ -27,8 +31,12 @@ class MyScheduleViewModel {
         do {
             try await APIClient.shared.unenroll(enrollmentId: enrollmentId)
             enrolledClasses.removeAll { $0.enrollmentId == enrollmentId }
+        } catch is CancellationError {
+            // Ignore
         } catch {
-            errorMessage = (error as? APIError)?.localizedDescription ?? "Something went wrong. Please try again later."
+            if !Task.isCancelled {
+                errorMessage = (error as? APIError)?.localizedDescription ?? "Something went wrong. Please try again later."
+            }
         }
     }
 }

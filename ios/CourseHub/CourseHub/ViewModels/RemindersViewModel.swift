@@ -51,8 +51,11 @@ class RemindersViewModel {
             dates.append(contentsOf: CustomReminderStore.shared.loadAll())
             allDates = dates
             reminders = ReminderStore.shared.loadAll()
+        } catch is CancellationError {
         } catch {
-            errorMessage = (error as? APIError)?.localizedDescription ?? "Something went wrong. Please try again later."
+            if !Task.isCancelled {
+                errorMessage = (error as? APIError)?.localizedDescription ?? "Something went wrong. Please try again later."
+            }
         }
         isLoading = false
     }

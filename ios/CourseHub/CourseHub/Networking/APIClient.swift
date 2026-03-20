@@ -94,6 +94,8 @@ class APIClient {
         let (data, response): (Data, URLResponse)
         do {
             (data, response) = try await URLSession.shared.data(for: request)
+        } catch let urlError as URLError where urlError.code == .cancelled {
+            throw CancellationError()
         } catch {
             throw APIError.networkError(error)
         }

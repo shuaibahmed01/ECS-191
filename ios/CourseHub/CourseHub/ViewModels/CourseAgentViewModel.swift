@@ -26,8 +26,11 @@ class CourseAgentViewModel {
             messages = response.messages.map { msg in
                 AgentMessage(role: msg.role, content: msg.content, citations: msg.citations ?? [])
             }
+        } catch is CancellationError {
         } catch {
-            errorMessage = (error as? APIError)?.localizedDescription ?? "Something went wrong. Please try again later."
+            if !Task.isCancelled {
+                errorMessage = (error as? APIError)?.localizedDescription ?? "Something went wrong. Please try again later."
+            }
         }
 
         isLoading = false
@@ -64,11 +67,13 @@ class CourseAgentViewModel {
             )
             let agentMessage = AgentMessage(role: "assistant", content: response.response, citations: response.citations ?? [])
             messages.append(agentMessage)
+        } catch is CancellationError {
         } catch {
-            errorMessage = (error as? APIError)?.localizedDescription ?? "Something went wrong. Please try again later."
-            // Remove the optimistic user message on failure
-            if messages.last?.id == userMessage.id {
-                messages.removeLast()
+            if !Task.isCancelled {
+                errorMessage = (error as? APIError)?.localizedDescription ?? "Something went wrong. Please try again later."
+                if messages.last?.id == userMessage.id {
+                    messages.removeLast()
+                }
             }
         }
 

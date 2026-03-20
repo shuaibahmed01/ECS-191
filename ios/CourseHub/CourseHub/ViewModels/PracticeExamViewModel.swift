@@ -25,8 +25,11 @@ class PracticeExamViewModel {
         do {
             let response = try await APIClient.shared.getPracticeExams(classId: classId)
             exams = response.exams
+        } catch is CancellationError {
         } catch {
-            errorMessage = (error as? APIError)?.localizedDescription ?? "Something went wrong. Please try again later."
+            if !Task.isCancelled {
+                errorMessage = (error as? APIError)?.localizedDescription ?? "Something went wrong. Please try again later."
+            }
         }
 
         isLoading = false
@@ -70,8 +73,11 @@ class PracticeExamViewModel {
         do {
             let response = try await APIClient.shared.getPracticeExam(classId: classId, examId: examId)
             currentExam = response.exam
+        } catch is CancellationError {
         } catch {
-            errorMessage = (error as? APIError)?.localizedDescription ?? "Something went wrong. Please try again later."
+            if !Task.isCancelled {
+                errorMessage = (error as? APIError)?.localizedDescription ?? "Something went wrong. Please try again later."
+            }
         }
 
         // Don't set isLoading = false here — let loadExamWithAttempts handle it

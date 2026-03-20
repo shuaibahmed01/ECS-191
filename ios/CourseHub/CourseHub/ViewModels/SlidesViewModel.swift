@@ -24,12 +24,14 @@ class SlidesViewModel {
         do {
             let response = try await APIClient.shared.getSlides(classId: classId)
             slides = response.slides
-            // Check for existing flashcards per slide
             for slide in slides {
                 await loadFlashcards(for: slide.id)
             }
+        } catch is CancellationError {
         } catch {
-            errorMessage = (error as? APIError)?.localizedDescription ?? "Something went wrong. Please try again later."
+            if !Task.isCancelled {
+                errorMessage = (error as? APIError)?.localizedDescription ?? "Something went wrong. Please try again later."
+            }
         }
 
         isLoading = false

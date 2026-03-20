@@ -24,8 +24,11 @@ class ClassListViewModel {
 
         do {
             allClasses = try await APIClient.shared.fetchClasses()
+        } catch is CancellationError {
         } catch {
-            errorMessage = (error as? APIError)?.localizedDescription ?? "Something went wrong. Please try again later."
+            if !Task.isCancelled {
+                errorMessage = (error as? APIError)?.localizedDescription ?? "Something went wrong. Please try again later."
+            }
         }
 
         isLoading = false
