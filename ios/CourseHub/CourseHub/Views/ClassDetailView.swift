@@ -147,7 +147,7 @@ struct ClassDetailView: View {
                         try await APIClient.shared.unenroll(enrollmentId: entry.enrollmentId)
                         dismiss()
                     } catch {
-                        removeError = error.localizedDescription
+                        removeError = (error as? APIError)?.localizedDescription ?? "Something went wrong. Please try again later."
                     }
                     isRemoving = false
                 }

@@ -177,7 +177,7 @@ struct CustomClassFormView: View {
             )
             onCreated(created)
         } catch {
-            errorMessage = error.localizedDescription
+            errorMessage = (error as? APIError)?.localizedDescription ?? "Something went wrong. Please try again later."
         }
         isSubmitting = false
     }

@@ -11,6 +11,16 @@ struct FlashcardStudyView: View {
 
     var body: some View {
         NavigationStack {
+            if cards.isEmpty {
+                ContentUnavailableView("No Flashcards", systemImage: "rectangle.on.rectangle.slash", description: Text("There are no flashcards to study."))
+                    .navigationTitle(slideTitle)
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar {
+                        ToolbarItem(placement: .cancellationAction) {
+                            Button("Done") { dismiss() }
+                        }
+                    }
+            } else {
             VStack(spacing: 24) {
                 // Progress counter
                 Text("\(currentIndex + 1) / \(cards.count)")
@@ -85,6 +95,7 @@ struct FlashcardStudyView: View {
                     Button("Done") { dismiss() }
                 }
             }
+            } // end else (cards not empty)
         }
     }
 

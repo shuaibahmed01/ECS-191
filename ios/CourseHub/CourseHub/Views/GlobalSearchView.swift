@@ -101,8 +101,11 @@ struct GlobalSearchView: View {
         errorMessage = nil
         do {
             results = try await APIClient.shared.globalSearch(query: q)
+        } catch is CancellationError {
         } catch {
-            errorMessage = error.localizedDescription
+            if !Task.isCancelled {
+                errorMessage = (error as? APIError)?.localizedDescription ?? "Something went wrong. Please try again later."
+            }
         }
         isSearching = false
     }
